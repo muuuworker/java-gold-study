@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第7章 ジェネリクスとコレクション | Java Gold SE17</title>
+  
+  <!-- Fonts & Icons for Material Design 3 -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Fira+Code&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+  
+  <style>
+    /* Material Design 3 Light Theme Tokens */
+    :root {
+      --md-sys-color-primary: #6750A4;
+      --md-sys-color-on-primary: #FFFFFF;
+      --md-sys-color-primary-container: #EADDFF;
+      --md-sys-color-on-primary-container: #21005D;
+      --md-sys-color-secondary-container: #E8DEF8;
+      --md-sys-color-on-secondary-container: #1D192B;
+      --md-sys-color-surface: #FEF7FF;
+      --md-sys-color-on-surface: #1C1B1F;
+      --md-sys-color-surface-variant: #E7E0EC;
+      --md-sys-color-on-surface-variant: #49454F;
+      --md-sys-color-outline: #79747E;
+      --md-sys-color-outline-variant: #CAC4D0;
+      --md-sys-color-background: #FEF7FF;
+    }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: var(--md-sys-color-background);
+      color: var(--md-sys-color-on-surface);
+      margin: 0;
+      padding: 0;
+      line-height: 1.6;
+    }
+
+    /* Top App Bar */
+    .app-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 24px;
+      background-color: var(--md-sys-color-surface);
+      color: var(--md-sys-color-on-surface);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    }
+    .app-bar h1 {
+      font-size: 20px;
+      font-weight: 500;
+      margin: 0;
+      color: var(--md-sys-color-primary);
+    }
+    .icon-button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--md-sys-color-on-surface-variant);
+      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.2s;
+    }
+    .icon-button:hover {
+      background-color: var(--md-sys-color-surface-variant);
+    }
+
+    /* Navigation Drawer (Right Side) */
+    .drawer {
+      position: fixed;
+      top: 0;
+      right: -320px;
+      width: 300px;
+      height: 100vh;
+      background-color: var(--md-sys-color-surface);
+      border-left: 1px solid var(--md-sys-color-outline-variant);
+      transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 20;
+      padding: 24px 12px;
+      overflow-y: auto;
+    }
+    .drawer.open {
+      right: 0;
+    }
+    .drawer-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.3);
+      z-index: 15;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .drawer-overlay.open {
+      display: block;
+      opacity: 1;
+    }
+    .drawer h2 {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--md-sys-color-on-surface-variant);
+      padding: 0 16px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .drawer a {
+      display: block;
+      padding: 16px;
+      color: var(--md-sys-color-on-surface);
+      text-decoration: none;
+      border-radius: 28px;
+      font-weight: 500;
+      margin-bottom: 4px;
+      transition: background-color 0.2s;
+    }
+    .drawer a:hover {
+      background-color: var(--md-sys-color-secondary-container);
+      color: var(--md-sys-color-on-secondary-container);
+    }
+
+    /* Main Content */
+    .main-content {
+      max-width: 900px;
+      margin: 32px auto;
+      padding: 0 24px;
+    }
+    .card {
+      background-color: var(--md-sys-color-surface);
+      border: 1px solid var(--md-sys-color-outline-variant);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 32px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    h2.section-title {
+      color: var(--md-sys-color-primary);
+      font-size: 22px;
+      margin-top: 0;
+      margin-bottom: 16px;
+      font-weight: 500;
+      border-bottom: 2px solid var(--md-sys-color-primary-container);
+      padding-bottom: 8px;
+    }
+    h3 {
+      font-size: 18px;
+      font-weight: 500;
+      margin-top: 32px;
+      margin-bottom: 12px;
+      color: var(--md-sys-color-on-surface);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    h3 .material-symbols-outlined {
+      color: var(--md-sys-color-primary);
+      font-size: 20px;
+    }
+    p {
+      color: var(--md-sys-color-on-surface-variant);
+      margin-bottom: 16px;
+    }
+
+    /* Code and Output Grouping */
+    .code-group {
+      margin: 16px 0 32px 0;
+      border: 1px solid var(--md-sys-color-outline-variant);
+      border-radius: 8px;
+      overflow: hidden;
+      background-color: #FAFAFA;
+    }
+    .code-block {
+      margin: 0;
+      padding: 16px;
+      font-family: 'Fira Code', monospace;
+      font-size: 14px;
+      overflow-x: auto;
+      color: #333;
+    }
+    .output-block {
+      background-color: #F0FDF4; /* Light Green */
+      margin: 0;
+      padding: 12px 16px;
+      font-family: 'Fira Code', monospace;
+      font-size: 14px;
+      color: #166534;
+      border-top: 1px solid #BBF7D0;
+    }
+    .output-label {
+      font-weight: 700;
+      font-size: 12px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #15803D;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px 0;
+      font-size: 14px;
+    }
+    th, td {
+      border: 1px solid var(--md-sys-color-outline-variant);
+      padding: 12px 16px;
+      text-align: left;
+    }
+    th {
+      background-color: var(--md-sys-color-surface-variant);
+      color: var(--md-sys-color-on-surface-variant);
+      font-weight: 500;
+    }
+
+    /* Badges & Inline Code */
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .badge.ok { background-color: #DCFCE7; color: #15803D; }
+    .badge.ng { background-color: #FEE2E2; color: #B91C1C; }
+    .badge.warn { background-color: #FEF9C3; color: #A16207; }
+
+    code.inline {
+      background-color: var(--md-sys-color-surface-variant);
+      color: var(--md-sys-color-on-surface-variant);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Fira Code', monospace;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top App Bar -->
+  <header class="app-bar">
+    <h1>第7章 ジェネリクスとコレクション</h1>
+    <button class="icon-button" id="menuBtn" aria-label="Open Table of Contents">
+      <span class="material-symbols-outlined">more_vert</span>
+    </button>
+  </header>
+
+  <!-- Right Navigation Drawer -->
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+  <nav class="drawer" id="drawer">
+    <h2>目次</h2>
+    <a href="#boxing" class="drawer-link">1. オートボクシング</a>
+    <a href="#generics" class="drawer-link">2. ジェネリクス</a>
+    <a href="#list" class="drawer-link">3. List</a>
+    <a href="#set" class="drawer-link">4. Set</a>
+    <a href="#map" class="drawer-link">5. Map</a>
+    <a href="#queue" class="drawer-link">6. Queue/Deque</a>
+    <a href="#comparator" class="drawer-link">7. Comparator</a>
+    <a href="#collections" class="drawer-link">8. Collections</a>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main-content">
+
+    <section id="boxing" class="card">
+      <h2 class="section-title">1. オートボクシング / アンボクシング</h2>
+      
+      <h3><span class="material-symbols-outlined">table</span> プリミティブ型とラッパークラスの比較</h3>
+      <table>
+        <tr><th>プリミティブ型</th><th>ラッパークラス</th><th>注意点</th></tr>
+        <tr><td><code class="inline">int</code></td><td><code class="inline">Integer</code></td><td>名前が変わる</td></tr>
+        <tr><td><code class="inline">char</code></td><td><code class="inline">Character</code></td><td>名前が変わる</td></tr>
+        <tr><td><code class="inline">boolean</code></td><td><code class="inline">Boolean</code></td><td>頭文字大文字</td></tr>
+        <tr><td><code class="inline">double</code></td><td><code class="inline">Double</code></td><td>頭文字大文字</td></tr>
+      </table>
+
+      <h3><span class="material-symbols-outlined">description</span> 型の自動変換について</h3>
+      <p>Javaでは、基本データ型（<code class="inline">int</code>など）とそれに対応するラッパークラス（<code class="inline">Integer</code>など）の間で、コンパイラが自動的に変換を行います。<br>基本型からラッパークラスへの変換を「オートボクシング」、逆を「アンボクシング」と呼びます。明示的なキャストなしで代入できるためコードがすっきりします。</p>
+      
+      <div class="code-group">
+        <pre class="code-block">Integer boxed = 10;  // オートボクシング (Integer.valueOf(10) が呼ばれる)
+int unboxed = boxed; // アンボクシング (boxed.intValue() が呼ばれる)
+System.out.println("boxed: " + boxed + ", unboxed: " + unboxed);</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          boxed: 10, unboxed: 10
+        </div>
+      </div>
+
+      <h3><span class="material-symbols-outlined">table</span> ⚠️ Integer キャッシュの範囲比較</h3>
+      <table>
+        <tr><th>ラッパークラス</th><th>キャッシュされる範囲</th></tr>
+        <tr><td><code class="inline">Integer, Byte, Short, Long</code></td><td>-128 ～ 127</td></tr>
+        <tr><td><code class="inline">Character</code></td><td>0 ～ 127</td></tr>
+        <tr><td><code class="inline">Boolean</code></td><td>true / false</td></tr>
+        <tr><td><code class="inline">Float, Double</code></td><td>キャッシュなし</td></tr>
+      </table>
+
+      <h3><span class="material-symbols-outlined">description</span> 同一オブジェクトとして扱われる罠（試験頻出）</h3>
+      <p>ラッパークラスにはメモリを節約するためのキャッシュ機構があります。<code class="inline">Integer</code> の場合、<code class="inline">-128 ～ 127</code> の範囲の値は同じインスタンスが再利用されます。<br>
+      そのため、この範囲内の数値を <code class="inline">==</code> で比較すると <code class="inline">true</code> になりますが、範囲外だと別インスタンスとして生成されるため <code class="inline">false</code> になります。<br>
+      <strong>ラッパークラスの値比較は、必ず <code class="inline">equals()</code> を使用してください。</strong></p>
+      
+      <div class="code-group">
+        <pre class="code-block">// キャッシュ範囲内 (-128 ~ 127)
+Integer a = 127;
+Integer b = 127;
+System.out.println("127 == 127: " + (a == b));
+
+// キャッシュ範囲外
+Integer c = 128;
+Integer d = 128;
+System.out.println("128 == 128 (==比較): " + (c == d));
+System.out.println("128 == 128 (equals): " + c.equals(d));</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          127 == 127: true<br>
+          128 == 128 (==比較): false<br>
+          128 == 128 (equals): true
+        </div>
+      </div>
+    </section>
+
+    <section id="generics" class="card">
+      <h2 class="section-title">2. ジェネリクス</h2>
+      
+      <h3><span class="material-symbols-outlined">table</span> 型パラメータとワイルドカードの比較</h3>
+      <table>
+        <tr><th>記法</th><th>型の状態</th><th>読み取り</th><th>書き込み</th></tr>
+        <tr><td><code class="inline">&lt;?&gt;</code></td><td>不明</td><td>Object のみ</td><td><span class="badge ng">不可</span></td></tr>
+        <tr><td><code class="inline">&lt;T&gt;</code></td><td>確定（呼出時）</td><td>T として可</td><td><span class="badge ok">T 型なら可</span></td></tr>
+        <tr><td><code class="inline">&lt;T extends X&gt;</code></td><td>確定（X 以下）</td><td>X として可</td><td><span class="badge ok">T 型なら可</span></td></tr>
+        <tr><td><code class="inline">&lt;? extends X&gt;</code></td><td>不明（X のサブクラス）</td><td>X として可</td><td><span class="badge ng">不可</span></td></tr>
+        <tr><td><code class="inline">&lt;? super X&gt;</code></td><td>不明（X の親クラス）</td><td>Object のみ</td><td><span class="badge ok">X 型なら可</span></td></tr>
+      </table>
+
+      <h3><span class="material-symbols-outlined">description</span> 型安全性を保証する仕組み</h3>
+      <p>ジェネリクスは、コレクションなどに格納する「型」をパラメータとして指定する仕組みです。<br>
+      コンパイル時に型チェックが行われるため、取り出す際の明示的なキャストが不要になり、実行時のキャスト例外（<code class="inline">ClassCastException</code>）を防ぐことができます。<br>
+      また、<code class="inline">&lt;T extends Number&gt;</code> のように上限境界を指定することで、「Numberクラスとそのサブクラスのみ受け入れる」といった制限をかけることが可能です。</p>
+
+      <div class="code-group">
+        <pre class="code-block">// Number のサブクラスに限定するジェネリクスメソッド
+public static &lt;T extends Number&gt; double sum(List&lt;T&gt; list) {
+    double total = 0;
+    for (T item : list) {
+        total += item.doubleValue(); // Numberのメソッドが安全に呼べる
+    }
+    return total;
+}
+
+List&lt;Integer&gt; intList = Arrays.asList(1, 2, 3);
+System.out.println("Sum: " + sum(intList));</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          Sum: 6.0
+        </div>
+      </div>
+    </section>
+
+    <section id="list" class="card">
+      <h2 class="section-title">3. List&lt;E&gt;</h2>
+
+      <h3><span class="material-symbols-outlined">table</span> Listの実装クラス比較</h3>
+      <table>
+        <tr><th>実装クラス</th><th>内部構造</th><th>インデックス取得 (get)</th><th>中間への挿入・削除</th><th>特徴</th></tr>
+        <tr><td><code class="inline">ArrayList</code></td><td>配列</td><td>高速 (O(1))</td><td>遅い (O(n))</td><td>最もよく使われる。検索が速い</td></tr>
+        <tr><td><code class="inline">LinkedList</code></td><td>双方向連結リスト</td><td>遅い (O(n))</td><td>高速 (O(1))</td><td>要素の追加・削除が頻繁な場合に有利</td></tr>
+      </table>
+      
+      <h3><span class="material-symbols-outlined">description</span> 順序付きリストの基本</h3>
+      <p>List は「要素の追加順序を保持し、重複を許可する」コレクションです。最も代表的な <code class="inline">ArrayList</code> は内部的に配列を使用しているため、インデックスを指定した要素の取得が非常に高速です。</p>
+
+      <div class="code-group">
+        <pre class="code-block">List&lt;String&gt; list = new ArrayList&lt;&gt;();
+list.add("Cherry");
+list.add("Apple");
+list.add("Banana");
+list.add("Apple"); // 重複を許可
+
+System.out.println("ArrayList: " + list);
+System.out.println("get(1): " + list.get(1));</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          ArrayList: [Cherry, Apple, Banana, Apple]<br>
+          get(1): Apple
+        </div>
+      </div>
+
+      <h3><span class="material-symbols-outlined">table</span> ⚠️ 不変リスト生成の罠（試験頻出）</h3>
+      <table>
+        <tr><th>生成方法</th><th>変更可否</th><th>null要素</th><th>特徴</th></tr>
+        <tr><td><code class="inline">new ArrayList&lt;&gt;()</code></td><td><span class="badge ok">全て可</span></td><td><span class="badge ok">可</span></td><td>通常の可変リスト</td></tr>
+        <tr><td><code class="inline">Arrays.asList(...)</code></td><td><span class="badge warn">setのみ可</span></td><td><span class="badge ok">可</span></td><td>固定サイズ。add/remove は例外</td></tr>
+        <tr><td><code class="inline">List.of(...)</code></td><td><span class="badge ng">全て不可</span></td><td><span class="badge ng">不可</span></td><td>Java 9以降。完全不変</td></tr>
+      </table>
+
+      <h3><span class="material-symbols-outlined">description</span> 生成方法による可変性の違い</h3>
+      <p>Listを生成する際、使用するメソッドによってその後の「変更可否（可変性）」が異なります。<br>
+      特に <code class="inline">Arrays.asList()</code> は、要素の変更（set）はできますが、追加や削除を行おうとすると例外（<code class="inline">UnsupportedOperationException</code>）が発生します。<br>
+      また、Java 9 で導入された <code class="inline">List.of()</code> は、要素の変更も追加・削除も一切できない「完全な不変リスト」を作成します。</p>
+
+      <div class="code-group">
+        <pre class="code-block">List&lt;String&gt; immutableList = List.of("X", "Y", "Z");
+System.out.println("List.of(): " + immutableList);
+
+// 以下のコードはコンパイルは通るが、実行時に UnsupportedOperationException が発生します
+// immutableList.add("W"); 
+// immutableList.set(0, "A");</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          List.of(): [X, Y, Z]
+        </div>
+      </div>
+    </section>
+
+    <section id="set" class="card">
+      <h2 class="section-title">4. Set&lt;E&gt;</h2>
+
+      <h3><span class="material-symbols-outlined">table</span> Setの実装クラス比較</h3>
+      <table>
+        <tr><th>実装クラス</th><th>順序の保証</th><th>検索速度</th><th>主な用途</th></tr>
+        <tr><td><code class="inline">HashSet</code></td><td>なし</td><td>最高速 (O(1))</td><td>順序を気にせず重複を省きたい時</td></tr>
+        <tr><td><code class="inline">LinkedHashSet</code></td><td>挿入順</td><td>高速 (O(1))</td><td>入れた順番通りに取り出したい時</td></tr>
+        <tr><td><code class="inline">TreeSet</code></td><td>自然順序（昇順など）</td><td>やや遅い (O(log n))</td><td>常にソートされた状態を保ちたい時</td></tr>
+      </table>
+
+      <h3><span class="material-symbols-outlined">description</span> 重複不可コレクションの使い分け</h3>
+      <p>Set は「重複する要素を持たない」コレクションです。<br>
+      <code class="inline">HashSet</code> は最も一般的で処理が高速ですが、順序は全く保証されません。順序が必要な場合は <code class="inline">LinkedHashSet</code>（挿入順）や <code class="inline">TreeSet</code>（ソート順）を使用します。</p>
+      
+      <div class="code-group">
+        <pre class="code-block">Set&lt;String&gt; hashSet = new HashSet&lt;&gt;(Arrays.asList("Dog", "Cat", "Bird", "Cat"));
+System.out.println("HashSet (順序保証なし): " + hashSet);
+
+Set&lt;String&gt; linkedHashSet = new LinkedHashSet&lt;&gt;(Arrays.asList("Dog", "Cat", "Bird", "Cat"));
+System.out.println("LinkedHashSet (挿入順): " + linkedHashSet);
+
+Set&lt;String&gt; treeSet = new TreeSet&lt;&gt;(Arrays.asList("Dog", "Cat", "Bird"));
+System.out.println("TreeSet (ソート順): " + treeSet);</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          HashSet (順序保証なし): [Cat, Bird, Dog] <br>
+          LinkedHashSet (挿入順): [Dog, Cat, Bird] <br>
+          TreeSet (ソート順): [Bird, Cat, Dog]
+        </div>
+      </div>
+    </section>
+
+    <section id="map" class="card">
+      <h2 class="section-title">5. Map&lt;K,V&gt;</h2>
+      
+      <h3><span class="material-symbols-outlined">table</span> Mapの実装クラス比較</h3>
+      <table>
+        <tr><th>実装クラス</th><th>キーの順序</th><th>nullキーの許可</th><th>特徴</th></tr>
+        <tr><td><code class="inline">HashMap</code></td><td>保証なし</td><td><span class="badge ok">可</span></td><td>最もよく使われる。検索が速い</td></tr>
+        <tr><td><code class="inline">LinkedHashMap</code></td><td>挿入順</td><td><span class="badge ok">可</span></td><td>挿入された順番を保持する</td></tr>
+        <tr><td><code class="inline">TreeMap</code></td><td>キーの昇順</td><td><span class="badge ng">不可</span></td><td>常にキーでソートされる</td></tr>
+      </table>
+
+      <h3><span class="material-symbols-outlined">description</span> キーと値のペアでのデータ管理</h3>
+      <p>Map はキー（Key）と値（Value）のペアでデータを管理します。キーの重複は許可されません。<br>
+      もし既に存在するキーに対して再度 <code class="inline">put</code> メソッドを実行した場合、<strong>古い値が新しい値で上書き</strong>されます。</p>
+
+      <div class="code-group">
+        <pre class="code-block">Map&lt;Integer, String&gt; map = new HashMap&lt;&gt;();
+map.put(3, "Three");
+map.put(1, "One");
+map.put(2, "Two");
+
+// キー「1」は既に存在するため、「One_Updated」に上書きされる
+map.put(1, "One_Updated"); 
+
+System.out.println("HashMap: " + map);</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          HashMap: {1=One_Updated, 2=Two, 3=Three}
+        </div>
+      </div>
+
+      <h3><span class="material-symbols-outlined">description</span> 便利な値の取得・追加メソッド</h3>
+      <p><code class="inline">getOrDefault</code> は、指定したキーが存在しない場合に例外やnullを返す代わりに、あらかじめ指定したデフォルト値を返します。<br>
+      <code class="inline">putIfAbsent</code> は、「もしそのキーが存在していなければ追加する」という処理を行います。すでにキーが存在する場合は何も上書きされません。</p>
+
+      <div class="code-group">
+        <pre class="code-block">// キー99 は存在しないため、第二引数の "未登録" が返る
+System.out.println("getOrDefault(99): " + map.getOrDefault(99, "未登録"));
+
+// キー1 は既に存在するため、この putIfAbsent は無視（上書きされない）
+map.putIfAbsent(1, "Won't overwrite");
+System.out.println("putIfAbsent(1)後の値: " + map.get(1));</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          getOrDefault(99): 未登録<br>
+          putIfAbsent(1)後の値: One_Updated
+        </div>
+      </div>
+    </section>
+
+    <section id="queue" class="card">
+      <h2 class="section-title">6. Queue / Deque</h2>
+
+      <h3><span class="material-symbols-outlined">table</span> Queueメソッドの比較（例外スロー vs 特殊値返却）</h3>
+      <table>
+        <tr><th>操作</th><th>例外をスローするメソッド</th><th>null / false を返すメソッド（推奨）</th></tr>
+        <tr><td>追加</td><td><code class="inline">add(e)</code></td><td><code class="inline">offer(e)</code></td></tr>
+        <tr><td>取得 &amp; 削除</td><td><code class="inline">remove()</code></td><td><code class="inline">poll()</code></td></tr>
+        <tr><td>参照のみ</td><td><code class="inline">element()</code></td><td><code class="inline">peek()</code></td></tr>
+      </table>
+      
+      <h3><span class="material-symbols-outlined">description</span> 先入れ先出しのキュー操作</h3>
+      <p><code class="inline">Queue</code> は先入れ先出し（FIFO）のデータ構造です。<br>
+      要素を追加する場合は <code class="inline">offer()</code>、先頭を取得して削除する場合は <code class="inline">poll()</code>、先頭を取得するが削除はしない場合は <code class="inline">peek()</code> を使用するのが安全です（これらはエラー時にプログラムをクラッシュさせず、falseやnullを返します）。</p>
+      
+      <div class="code-group">
+        <pre class="code-block">Queue&lt;String&gt; queue = new LinkedList&lt;&gt;();
+queue.offer("First");
+queue.offer("Second");
+queue.offer("Third");
+
+System.out.println("peek (先頭参照): " + queue.peek());
+System.out.println("poll (先頭取得&削除): " + queue.poll());
+System.out.println("残り: " + queue);</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          peek (先頭参照): First<br>
+          poll (先頭取得&削除): First<br>
+          残り: [Second, Third]
+        </div>
+      </div>
+    </section>
+
+    <section id="comparator" class="card">
+      <h2 class="section-title">7. Comparator</h2>
+
+      <h3><span class="material-symbols-outlined">table</span> Comparable と Comparator の比較</h3>
+      <table>
+        <tr><th></th><th>Comparable</th><th>Comparator</th></tr>
+        <tr><td>所属パッケージ</td><td>java.lang</td><td>java.util</td></tr>
+        <tr><td>実装メソッド</td><td><code class="inline">compareTo(T o)</code></td><td><code class="inline">compare(T o1, T o2)</code></td></tr>
+        <tr><td>実装場所</td><td>比較対象のクラス自身</td><td>別クラス、またはラムダ式</td></tr>
+        <tr><td>用途</td><td>自然順序（デフォルトの並び順）</td><td>カスタム順序（複数定義可能）</td></tr>
+      </table>
+      
+      <h3><span class="material-symbols-outlined">description</span> 柔軟なソート条件の指定</h3>
+      <p>要素を並べ替える際、<code class="inline">Comparator</code> インターフェースを使用することで独自のソート順を定義できます。<br>
+      標準で用意されている <code class="inline">Comparator.naturalOrder()</code> を指定すれば昇順（自然順序）に、<code class="inline">Comparator.reverseOrder()</code> を指定すれば降順（逆順）にソートされます。</p>
+
+      <div class="code-group">
+        <pre class="code-block">List&lt;String&gt; names = new ArrayList&lt;&gt;(Arrays.asList("Charlie", "Alice", "Bob"));
+
+names.sort(Comparator.naturalOrder()); // 昇順
+System.out.println("naturalOrder: " + names);
+
+names.sort(Comparator.reverseOrder()); // 降順
+System.out.println("reverseOrder: " + names);</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          naturalOrder: [Alice, Bob, Charlie]<br>
+          reverseOrder: [Charlie, Bob, Alice]
+        </div>
+      </div>
+    </section>
+
+    <section id="collections" class="card">
+      <h2 class="section-title">8. Collections ユーティリティ</h2>
+
+      <h3><span class="material-symbols-outlined">table</span> 主な Collections のメソッド一覧</h3>
+      <table>
+        <tr><th>メソッド</th><th>説明</th></tr>
+        <tr><td><code class="inline">Collections.sort(list)</code></td><td>リストを昇順にソートする（Comparable実装が必要）</td></tr>
+        <tr><td><code class="inline">Collections.reverse(list)</code></td><td>リストの順序を逆にする</td></tr>
+        <tr><td><code class="inline">Collections.max / min</code></td><td>コレクション内の最大値 / 最小値を返す</td></tr>
+        <tr><td><code class="inline">Collections.frequency(col, obj)</code></td><td>コレクション内に指定した要素がいくつあるか数える</td></tr>
+      </table>
+      
+      <h3><span class="material-symbols-outlined">description</span> コレクション操作を補助する静的メソッド群</h3>
+      <p><code class="inline">Collections</code> クラス（末尾に 's' がつく）は、コレクションの操作に便利な static メソッドを集めたユーティリティクラスです。<br>
+      インスタンス化せずにそのまま <code class="inline">Collections.メソッド名</code> と呼び出すことで、並べ替えや検索を簡単に行うことができます。</p>
+
+      <div class="code-group">
+        <pre class="code-block">List&lt;Integer&gt; nums = new ArrayList&lt;&gt;(Arrays.asList(3, 1, 4, 1, 5, 9));
+
+System.out.println("max: " + Collections.max(nums));
+System.out.println("min: " + Collections.min(nums));
+System.out.println("frequency of 1 (1の出現回数): " + Collections.frequency(nums, 1));
+
+Collections.sort(nums); // リスト自身を昇順に書き換える
+System.out.println("sorted: " + nums);</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          max: 9<br>
+          min: 1<br>
+          frequency of 1 (1の出現回数): 2<br>
+          sorted: [1, 1, 3, 4, 5, 9]
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    const menuBtn = document.getElementById('menuBtn');
+    const drawer = document.getElementById('drawer');
+    const overlay = document.getElementById('drawerOverlay');
+    const drawerLinks = document.querySelectorAll('.drawer-link');
+
+    function toggleDrawer() {
+      drawer.classList.toggle('open');
+      overlay.classList.toggle('open');
+    }
+
+    menuBtn.addEventListener('click', toggleDrawer);
+    overlay.addEventListener('click', toggleDrawer);
+    
+    // リンククリック時にドロワーを閉じる
+    drawerLinks.forEach(link => {
+      link.addEventListener('click', () => {
+        if (drawer.classList.contains('open')) {
+          toggleDrawer();
+        }
+      });
+    });
+  </script>
+</body>
+</html>

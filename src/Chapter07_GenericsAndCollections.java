@@ -223,19 +223,48 @@ public class Chapter07_GenericsAndCollections {
         arrayList.add("Apple");
         arrayList.add("Banana");
         arrayList.add("Apple"); // 重複を許可
-        System.out.println("ArrayList: " + arrayList);              // → ArrayList: [Cherry, Apple, Banana, Apple]
-        System.out.println("インデックスアクセス [1]: " + arrayList.get(1)); // → インデックスアクセス [1]: Apple
+        System.out.println("ArrayList: " + arrayList);
+        // → ArrayList: [Cherry, Apple, Banana, Apple]
+        System.out.println("インデックスアクセス [1]: " + arrayList.get(1));
+        // → インデックスアクセス [1]: Apple
 
         // LinkedList: 内部的に双方向連結リストで実装。
-        //             中間への挿入/削除は O(1)、インデックスアクセスは O(n)。
+        //             中間への挿入/削除は O(1)が高速。
+        //             インデックスアクセスは O(n)。
         //             List と Deque の両方を実装している。
         List<String> linkedList = new LinkedList<>(arrayList);
         System.out.println("LinkedList: " + linkedList);
+        // → LinkedList: [Cherry, Apple, Banana, Apple]
+        // ※ arrayList をコピーしているので要素・順序は同じ。内部実装（配列 vs 連結リスト）が異なるだけ。
 
         // List.of() : Java 9以降。不変(immutable)なリストを生成する。
         //             null要素不可、追加/変更/削除は UnsupportedOperationException をスロー。
         List<String> immutableList = List.of("X", "Y", "Z");
         System.out.println("List.of(): " + immutableList);
+        // → List.of(): [X, Y, Z]
+
+        // ============================================================
+        // 【不変リストの作り方まとめ表】(試験頻出)
+        // ============================================================
+        //
+        //   ┌──────────────────────┬──────────────┬──────────┬────────────────────────────────────────────┐
+        //   │ 生成方法             │ 変更可否      │ null要素 │ 特徴                                       │
+        //   ├──────────────────────┼──────────────┼──────────┼────────────────────────────────────────────┤
+        //   │ new ArrayList<>()   │ ✅ 全て可     │ ✅ 可    │ 通常の可変リスト                           │
+        //   │ Arrays.asList(...)  │ ⚠️ set のみ可 │ ✅ 可    │ 固定サイズ。add/remove は例外              │
+        //   │ List.of(...)        │ ❌ 全て不可   │ ❌ 不可  │ Java 9以降。完全不変                       │
+        //   │ List.copyOf(list)   │ ❌ 全て不可   │ ❌ 不可  │ Java 10以降。既存リストを不変コピー        │
+        //   └──────────────────────┴──────────────┴──────────┴────────────────────────────────────────────┘
+        //
+        //   【Arrays.asList() の罠 (試験頻出)】
+        //   Arrays.asList() が返すリストは「固定サイズリスト」であり、完全な可変リストではない。
+        //     list.set(0, "NEW")  → ✅ OK（要素の上書きは可能）
+        //     list.add("X")       → ❌ UnsupportedOperationException（サイズ変更は不可）
+        //     list.remove("X")    → ❌ UnsupportedOperationException（サイズ変更は不可）
+        //
+        //   可変リストとして使いたい場合は、必ず ArrayList でラップすること:
+        //     List<String> mutable = new ArrayList<>(Arrays.asList("A", "B", "C")); // ✅
+        //
 
         System.out.println();
 
@@ -250,16 +279,26 @@ public class Chapter07_GenericsAndCollections {
         //          → 独自クラスを Set に入れる場合は両メソッドをオーバーライドすること。
         Set<String> hashSet = new HashSet<>(Arrays.asList("Dog", "Cat", "Bird", "Cat"));
         System.out.println("HashSet (重複が排除される): " + hashSet);
+        // → HashSet (重複が排除される): [Cat, Bird, Dog] ※順序は実行ごとに異なる（保証なし）
+        // ※ 「Cat」の重複が排除され3要素になる。ただし順序は HashSet の内部実装依存。
 
         // LinkedHashSet: 挿入順序を保持する HashSet。
         Set<String> linkedHashSet = new LinkedHashSet<>(Arrays.asList("Dog", "Cat", "Bird", "Cat"));
         System.out.println("LinkedHashSet (挿入順序を保持): " + linkedHashSet);
+        // → LinkedHashSet (挿入順序を保持): [Dog, Cat, Bird]
+        // ※ 重複「Cat」は排除されるが、最初に追加された順序（Dog→Cat→Bird）は保持される。
 
         // TreeSet: 赤黒木(Red-Black Tree)で実装。自然順序(昇順)でソートされる。
         //          Comparable または Comparator が必要。操作は O(log n)。
         Set<String> treeSet = new TreeSet<>(Arrays.asList("Dog", "Cat", "Bird"));
         System.out.println("TreeSet (自然順序でソート): " + treeSet);
+        // → TreeSet (自然順序でソート): [Bird, Cat, Dog]
+        // ※ アルファベット昇順（自然順序）で自動ソートされる。B→C→D の順。
 
+        // 【Set 3種の使い分けまとめ】
+        //   HashSet       : とにかく速い。順序は捨てる。
+        //   LinkedHashSet : 挿入順序を覚えておきたい。
+        //   TreeSet       : 常にソートされた状態を保ちたい。
         System.out.println();
 
         // ============================================================
@@ -275,13 +314,19 @@ public class Chapter07_GenericsAndCollections {
         hashMap.put(2, "Two");
         hashMap.put(1, "One_Updated"); // キーが重複した場合、値が上書きされる
         System.out.println("HashMap: " + hashMap);
+        // → HashMap: {1=One_Updated, 2=Two, 3=Three} ※順序は保証なし
+        // ※ キー1 は put(1,"One") → put(1,"One_Updated") で上書きされている
 
         // getOrDefault(): キーが存在しない場合にデフォルト値を返す。
         System.out.println("getOrDefault(99, \"未登録\"): " + hashMap.getOrDefault(99, "未登録"));
+        // → getOrDefault(99, "未登録"): 未登録
+        // ※ キー99 は存在しないのでデフォルト値「未登録」が返る
 
         // putIfAbsent(): キーが存在しない場合のみ追加する。
         hashMap.putIfAbsent(1, "Won't overwrite");
-        System.out.println("putIfAbsent(1, ...): " + hashMap.get(1)); // 上書きされない
+        System.out.println("putIfAbsent(1, ...): " + hashMap.get(1));
+        // → putIfAbsent(1, ...): One_Updated
+        // ※ キー1 はすでに存在するため putIfAbsent は何もせず、元の値「One_Updated」のまま
 
         // LinkedHashMap: 挿入順序を保持する HashMap。
         // TreeMap: 自然順序(キー昇順)でソートされる HashMap。
@@ -289,10 +334,15 @@ public class Chapter07_GenericsAndCollections {
         // Map.of(): Java 9以降。不変なマップを生成する。
         Map<String, Integer> immutableMap = Map.of("A", 1, "B", 2);
         System.out.println("Map.of(): " + immutableMap);
+        // → Map.of(): {A=1, B=2} ※順序は保証なし（{B=2, A=1} になる場合もある）
 
         // エントリの反復処理
         System.out.println("--- Map の反復処理 ---");
         hashMap.forEach((key, value) -> System.out.println(key + " -> " + value));
+        // → 1 -> One_Updated
+        // → 2 -> Two
+        // → 3 -> Three
+        // ※ HashMap は順序を保証しないため、出力順序は実行ごとに変わる可能性がある
 
         System.out.println();
 

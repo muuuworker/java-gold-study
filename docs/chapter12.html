@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第12章 セキュアコーディング | Java Gold SE17</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Fira+Code&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+  <style>
+    :root { --md-sys-color-primary: #6750A4; --md-sys-color-primary-container: #EADDFF; --md-sys-color-secondary-container: #E8DEF8; --md-sys-color-on-secondary-container: #1D192B; --md-sys-color-surface: #FEF7FF; --md-sys-color-on-surface: #1C1B1F; --md-sys-color-surface-variant: #E7E0EC; --md-sys-color-on-surface-variant: #49454F; --md-sys-color-outline-variant: #CAC4D0; --md-sys-color-background: #FEF7FF; }
+    body { font-family: 'Roboto', sans-serif; background-color: var(--md-sys-color-background); color: var(--md-sys-color-on-surface); margin: 0; padding: 0; line-height: 1.6; }
+    .app-bar { display: flex; align-items: center; padding: 12px 24px; background-color: var(--md-sys-color-surface); position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--md-sys-color-outline-variant); }
+    .app-bar h1 { font-size: 20px; font-weight: 500; margin: 0; color: var(--md-sys-color-primary); flex-grow: 1; margin-left: 16px; }
+    .icon-button { background: none; border: none; cursor: pointer; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: background-color 0.2s; text-decoration: none; color: var(--md-sys-color-on-surface); }
+    .icon-button:hover { background-color: var(--md-sys-color-surface-variant); }
+    .drawer { position: fixed; top: 0; right: -280px; width: 280px; height: 100vh; background-color: var(--md-sys-color-surface); z-index: 20; transition: right 0.3s ease; padding: 24px 12px; overflow-y: auto; box-shadow: -2px 0 8px rgba(0,0,0,0.1); }
+    .drawer.open { right: 0; }
+    .drawer-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); z-index: 15; display: none; }
+    .drawer-overlay.open { display: block; }
+    .drawer h2 { font-size: 14px; font-weight: 500; color: var(--md-sys-color-on-surface-variant); margin: 0 0 12px 16px; text-transform: uppercase; }
+    .drawer a { display: block; padding: 16px; border-radius: 12px; color: var(--md-sys-color-on-surface); text-decoration: none; font-size: 14px; margin-bottom: 4px; transition: background-color 0.2s; }
+    .drawer a:hover { background-color: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
+    .main-content { max-width: 900px; margin: 32px auto; padding: 0 24px; }
+    .card { background-color: var(--md-sys-color-surface); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 16px; padding: 24px; margin-bottom: 32px; }
+    h2.section-title { color: var(--md-sys-color-primary); font-size: 22px; font-weight: 700; margin: 0 0 20px 0; border-bottom: 2px solid var(--md-sys-color-primary-container); padding-bottom: 8px; }
+    h3 { font-size: 18px; font-weight: 500; margin: 24px 0 12px 0; display: flex; align-items: center; gap: 8px; }
+    h3 .material-symbols-outlined { color: var(--md-sys-color-primary); font-size: 20px; }
+    p { color: var(--md-sys-color-on-surface-variant); margin-bottom: 16px; }
+    .code-group { border: 1px solid var(--md-sys-color-outline-variant); border-radius: 12px; overflow: hidden; background-color: #FAFAFA; margin-bottom: 20px; }
+    .code-block { margin: 0; padding: 16px; font-family: 'Fira Code', monospace; font-size: 13px; line-height: 1.7; overflow-x: auto; color: #333; }
+    .output-block { background-color: #F0FDF4; margin: 0; padding: 12px 16px; font-family: 'Fira Code', monospace; font-size: 13px; color: #166534; border-top: 1px solid #BBF7D0; }
+    .output-label { font-weight: 700; font-size: 12px; display: flex; align-items: center; gap: 6px; color: #15803D; text-transform: uppercase; margin-bottom: 4px; }
+    table { display: block; overflow-x: auto; border-collapse: collapse; margin: 16px 0 24px 0; font-size: 14px; }
+    th, td { border: 1px solid var(--md-sys-color-outline-variant); padding: 12px 16px; text-align: left; white-space: nowrap; }
+    th { background-color: var(--md-sys-color-surface-variant); color: var(--md-sys-color-on-surface-variant); font-weight: 500; }
+    .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 500; }
+    .badge.ok { background-color: #DCFCE7; color: #15803D; }
+    .badge.ng { background-color: #FEE2E2; color: #B91C1C; }
+    .badge.warn { background-color: #FEF9C3; color: #A16207; }
+    code.inline { background-color: var(--md-sys-color-surface-variant); color: var(--md-sys-color-on-surface-variant); padding: 2px 6px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <header class="app-bar">
+    <a href="index.html" class="icon-button"><span class="material-symbols-outlined">home</span></a>
+    <h1>第12章 セキュアコーディング</h1>
+    <button class="icon-button" id="menuBtn"><span class="material-symbols-outlined">more_vert</span></button>
+  </header>
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+  <nav class="drawer" id="drawer">
+    <h2>目次</h2>
+    <a href="#immutable" class="drawer-link">1. 不変オブジェクト</a>
+    <a href="#defensive-copy" class="drawer-link">2. 防御的コピー</a>
+    <a href="#injection" class="drawer-link">3. インジェクション対策</a>
+    <a href="#sensitive" class="drawer-link">4. 機密情報の扱い</a>
+    <a href="#input-validation" class="drawer-link">5. 入力値の検証</a>
+  </nav>
+
+  <main class="main-content">
+
+    <section id="immutable" class="card">
+      <h2 class="section-title">1. 不変（Immutable）オブジェクト</h2>
+      <h3><span class="material-symbols-outlined">table</span> 不変コレクションの作成方法</h3>
+      <table>
+        <tr><th>方法</th><th>コード例</th><th>注意点</th></tr>
+        <tr><td><code class="inline">List.of()</code></td><td><code class="inline">List.of("a", "b", "c")</code></td><td>null要素不可。変更不可</td></tr>
+        <tr><td><code class="inline">List.copyOf()</code></td><td><code class="inline">List.copyOf(existingList)</code></td><td>既存リストの防御的コピー。変更不可</td></tr>
+        <tr><td><code class="inline">Collections.unmodifiableList()</code></td><td><code class="inline">Collections.unmodifiableList(list)</code></td><td>元リストの変更はビューに反映される点に注意</td></tr>
+        <tr><td>Map.of() / Map.ofEntries()</td><td><code class="inline">Map.of("key", "value")</code></td><td>順序不定。null不可</td></tr>
+      </table>
+      <h3><span class="material-symbols-outlined">description</span> 不変クラスの設計パターン</h3>
+      <p>自作クラスを不変にするには以下を守ります：① クラスをfinalにする、② フィールドをprivate finalにする、③ セッターを提供しない、④ ミュータブルなフィールドは防御的コピーで返す</p>
+      <div class="code-group">
+        <pre class="code-block">// 不変クラスの例
+public final class Money {
+    private final int amount;
+    private final String currency;
+
+    public Money(int amount, String currency) {
+        if (amount &lt; 0) throw new IllegalArgumentException("金額は0以上");
+        this.amount = amount;
+        this.currency = Objects.requireNonNull(currency);
+    }
+
+    public int getAmount() { return amount; }
+    public String getCurrency() { return currency; }
+
+    // 演算は新しいオブジェクトを返す
+    public Money add(Money other) {
+        if (!this.currency.equals(other.currency))
+            throw new IllegalArgumentException("通貨が異なります");
+        return new Money(this.amount + other.amount, this.currency);
+    }
+}
+
+// 不変コレクション
+List&lt;String&gt; immutable = List.of("A", "B", "C");
+try {
+    immutable.add("D"); // UnsupportedOperationException
+} catch (UnsupportedOperationException e) {
+    System.out.println("変更不可: " + e.getClass().getSimpleName());
+}
+
+// List.copyOf: 既存の可変リストから不変コピーを作成
+List&lt;String&gt; mutable = new ArrayList&lt;&gt;(Arrays.asList("X", "Y"));
+List&lt;String&gt; copied = List.copyOf(mutable);
+mutable.add("Z");
+System.out.println("元リスト: " + mutable); // [X, Y, Z]
+System.out.println("コピー:   " + copied);  // [X, Y] (影響を受けない)</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          変更不可: UnsupportedOperationException<br>
+          元リスト: [X, Y, Z]<br>
+          コピー:   [X, Y]
+        </div>
+      </div>
+    </section>
+
+    <section id="defensive-copy" class="card">
+      <h2 class="section-title">2. 防御的コピー</h2>
+      <p>クラスがミュータブルなオブジェクトを受け取ったり返したりする場合、<strong>呼び出し元のコードからの意図しない変更</strong>を防ぐために防御的コピーを作成します。</p>
+      <div class="code-group">
+        <pre class="code-block">import java.util.Date;
+
+public final class Period {
+    private final Date start;
+    private final Date end;
+
+    // コンストラクタ: 引数をコピーして受け取る（攻撃を防ぐ）
+    public Period(Date start, Date end) {
+        // new Date(d.getTime()) で防御的コピーを作成
+        this.start = new Date(start.getTime());
+        this.end   = new Date(end.getTime());
+        if (this.start.after(this.end))
+            throw new IllegalArgumentException("開始日は終了日より前でなければなりません");
+    }
+
+    // ゲッター: フィールドのコピーを返す（内部状態の直接露出を防ぐ）
+    public Date getStart() { return new Date(start.getTime()); }
+    public Date getEnd()   { return new Date(end.getTime()); }
+}
+
+// 検証
+Date s = new Date();
+Date e = new Date(s.getTime() + 10000);
+Period p = new Period(s, e);
+
+// 元のDateオブジェクトを変更してもPeriodは影響を受けない
+s.setTime(Long.MAX_VALUE);
+System.out.println("start改ざん後: " + p.getStart()); // 元の値が保持される</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          start改ざん後: Thu May 16 14:30:00 JST 2024 (元の値が保持される)
+        </div>
+      </div>
+    </section>
+
+    <section id="injection" class="card">
+      <h2 class="section-title">3. インジェクション対策</h2>
+      <h3><span class="material-symbols-outlined">table</span> SQLインジェクション対策の比較</h3>
+      <table>
+        <tr><th></th><th>Statement（危険）</th><th>PreparedStatement（安全）</th></tr>
+        <tr><td>SQLの構築方法</td><td>文字列連結</td><td>プレースホルダ「?」使用</td></tr>
+        <tr><td>入力値の扱い</td><td>そのままSQLに埋め込み</td><td>エスケープ処理される</td></tr>
+        <tr><td>攻撃への耐性</td><td><span class="badge ng">脆弱</span></td><td><span class="badge ok">安全</span></td></tr>
+      </table>
+      <div class="code-group">
+        <pre class="code-block">// NG: SQLインジェクション脆弱なコード
+String userInput = "Alice' OR '1'='1"; // 悪意のある入力
+String dangerousSql = "SELECT * FROM users WHERE name = '" + userInput + "'";
+// 実行されるSQL: SELECT * FROM users WHERE name = 'Alice' OR '1'='1'
+// → 全レコードが返ってしまう！
+
+// OK: PreparedStatementで対策
+String safeSql = "SELECT * FROM users WHERE name = ?";
+try (PreparedStatement pstmt = conn.prepareStatement(safeSql)) {
+    pstmt.setString(1, userInput); // 自動的にエスケープされる
+    ResultSet rs = pstmt.executeQuery();
+    // 'Alice'' OR ''1''=''1' として安全に処理される
+}</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          PreparedStatementにより、悪意ある入力はエスケープされ、<br>
+          意図しないSQL実行を防ぐことができる
+        </div>
+      </div>
+    </section>
+
+    <section id="sensitive" class="card">
+      <h2 class="section-title">4. 機密情報の扱い</h2>
+      <h3><span class="material-symbols-outlined">table</span> パスワード等の機密情報の扱い方</h3>
+      <table>
+        <tr><th>事項</th><th>NG（危険）</th><th>OK（安全）</th></tr>
+        <tr><td>パスワードの保持型</td><td><code class="inline">String password</code></td><td><code class="inline">char[] password</code></td></tr>
+        <tr><td>理由</td><td>Stringはイミュータブルでガベージコレクション前まで文字列プールに残る可能性</td><td>char[]は使用後 <code class="inline">Arrays.fill(pw, '\0')</code> でゼロクリア可能</td></tr>
+        <tr><td>ログ出力</td><td>パスワードや個人情報をそのままログに出力</td><td>マスキング処理またはシステム変数として環境変数から取得</td></tr>
+      </table>
+      <div class="code-group">
+        <pre class="code-block">// NG: Stringでパスワードを保持
+String badPassword = "secret123"; // GCまでメモリに残る可能性
+
+// OK: char[]でパスワードを保持し、使用後にクリア
+char[] password = {'s', 'e', 'c', 'r', 'e', 't', '1', '2', '3'};
+try {
+    // パスワードを使用（JDBCの場合: getConnection(url, user, new String(password))）
+    System.out.println("認証処理中...");
+} finally {
+    // 使用後に必ずゼロクリア
+    Arrays.fill(password, '\0');
+    System.out.println("パスワードをメモリからクリア: " + new String(password)); // \0\0\0...
+}
+
+// 機密情報は環境変数から取得する（コードにハードコードしない）
+String dbPassword = System.getenv("DB_PASSWORD");
+String apiKey = System.getProperty("api.key");</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          認証処理中...<br>
+          パスワードをメモリからクリア: &#x0000;&#x0000;&#x0000;&#x0000;&#x0000;&#x0000;&#x0000;&#x0000;&#x0000;
+        </div>
+      </div>
+    </section>
+
+    <section id="input-validation" class="card">
+      <h2 class="section-title">5. 入力値の検証</h2>
+      <p>外部からの入力（ユーザー入力、ファイル読み込み、ネットワーク等）は常に信頼しないことが原則です。</p>
+      <div class="code-group">
+        <pre class="code-block">// Objects.requireNonNull: nullチェックと例外スローを1行で
+public void process(String value) {
+    // 従来
+    if (value == null) throw new NullPointerException("valueはnullにできません");
+    // 簡潔に書くなら
+    String v = Objects.requireNonNull(value, "valueはnullにできません");
+}
+
+// 範囲チェック
+public void setAge(int age) {
+    if (age &lt; 0 || age > 150) {
+        throw new IllegalArgumentException("年齢の範囲外: " + age);
+    }
+    this.age = age;
+}
+
+// 入力値の正規化（パストラバーサル攻撃対策）
+Path requestedPath = Path.of("/uploads").resolve(userInput).normalize();
+if (!requestedPath.startsWith("/uploads")) {
+    throw new SecurityException("不正なパスアクセス: " + requestedPath);
+}
+
+// null安全な文字列比較
+String input = null;
+// NG: input.equals("admin") → NullPointerException
+// OK: 定数を先に書く
+boolean isAdmin = "admin".equals(input); // false (例外なし)
+System.out.println("管理者: " + isAdmin);</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          管理者: false
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    const menuBtn = document.getElementById('menuBtn');
+    const drawer = document.getElementById('drawer');
+    const overlay = document.getElementById('drawerOverlay');
+    function toggleDrawer() { drawer.classList.toggle('open'); overlay.classList.toggle('open'); }
+    menuBtn.addEventListener('click', toggleDrawer);
+    overlay.addEventListener('click', toggleDrawer);
+    document.querySelectorAll('.drawer-link').forEach(l => l.addEventListener('click', () => { drawer.classList.remove('open'); overlay.classList.remove('open'); }));
+  </script>
+</body>
+</html>

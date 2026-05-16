@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第4章 ストリームAPI | Java Gold SE17</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Fira+Code&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+  <style>
+    :root { --md-sys-color-primary: #6750A4; --md-sys-color-on-primary: #FFFFFF; --md-sys-color-primary-container: #EADDFF; --md-sys-color-on-primary-container: #21005D; --md-sys-color-secondary-container: #E8DEF8; --md-sys-color-on-secondary-container: #1D192B; --md-sys-color-surface: #FEF7FF; --md-sys-color-on-surface: #1C1B1F; --md-sys-color-surface-variant: #E7E0EC; --md-sys-color-on-surface-variant: #49454F; --md-sys-color-outline: #79747E; --md-sys-color-outline-variant: #CAC4D0; --md-sys-color-background: #FEF7FF; }
+    body { font-family: 'Roboto', sans-serif; background-color: var(--md-sys-color-background); color: var(--md-sys-color-on-surface); margin: 0; padding: 0; line-height: 1.6; }
+    .app-bar { display: flex; align-items: center; justify-content: space-between; padding: 12px 24px; background-color: var(--md-sys-color-surface); position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--md-sys-color-outline-variant); }
+    .app-bar h1 { font-size: 20px; font-weight: 500; margin: 0; color: var(--md-sys-color-primary); }
+    .icon-button { background: none; border: none; cursor: pointer; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: background-color 0.2s; text-decoration: none; color: var(--md-sys-color-on-surface); }
+    .icon-button:hover { background-color: var(--md-sys-color-surface-variant); }
+    .drawer { position: fixed; top: 0; right: -280px; width: 280px; height: 100vh; background-color: var(--md-sys-color-surface); z-index: 20; transition: right 0.3s ease; padding: 24px 12px; overflow-y: auto; box-shadow: -2px 0 8px rgba(0,0,0,0.1); }
+    .drawer.open { right: 0; }
+    .drawer-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); z-index: 15; display: none; opacity: 0; transition: opacity 0.3s; }
+    .drawer-overlay.open { display: block; opacity: 1; }
+    .drawer h2 { font-size: 14px; font-weight: 500; color: var(--md-sys-color-on-surface-variant); margin: 0 0 12px 16px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .drawer a { display: block; padding: 16px; border-radius: 12px; color: var(--md-sys-color-on-surface); text-decoration: none; font-size: 14px; margin-bottom: 4px; transition: background-color 0.2s; }
+    .drawer a:hover { background-color: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
+    .main-content { max-width: 900px; margin: 32px auto; padding: 0 24px; }
+    .card { background-color: var(--md-sys-color-surface); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 16px; padding: 24px; margin-bottom: 32px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+    h2.section-title { color: var(--md-sys-color-primary); font-size: 22px; font-weight: 700; margin: 0 0 20px 0; border-bottom: 2px solid var(--md-sys-color-primary-container); padding-bottom: 8px; }
+    h3 { font-size: 18px; font-weight: 500; color: var(--md-sys-color-on-surface); margin: 24px 0 12px 0; display: flex; align-items: center; gap: 8px; }
+    h3 .material-symbols-outlined { color: var(--md-sys-color-primary); font-size: 20px; }
+    p { color: var(--md-sys-color-on-surface-variant); margin-bottom: 16px; }
+    .code-group { border: 1px solid var(--md-sys-color-outline-variant); border-radius: 12px; overflow: hidden; background-color: #FAFAFA; margin-bottom: 20px; }
+    .code-block { margin: 0; padding: 16px; font-family: 'Fira Code', monospace; font-size: 13px; line-height: 1.7; overflow-x: auto; color: #333; }
+    .output-block { background-color: #F0FDF4; margin: 0; padding: 12px 16px; font-family: 'Fira Code', monospace; font-size: 13px; line-height: 1.7; color: #166534; border-top: 1px solid #BBF7D0; }
+    .output-label { font-weight: 700; font-size: 12px; display: flex; align-items: center; gap: 6px; color: #15803D; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+    table { display: block; overflow-x: auto; width: 100%; border-collapse: collapse; margin: 16px 0 24px 0; font-size: 14px; }
+    th, td { border: 1px solid var(--md-sys-color-outline-variant); padding: 12px 16px; text-align: left; white-space: nowrap; }
+    th { background-color: var(--md-sys-color-surface-variant); color: var(--md-sys-color-on-surface-variant); font-weight: 500; }
+    .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 500; }
+    .badge.ok { background-color: #DCFCE7; color: #15803D; }
+    .badge.ng { background-color: #FEE2E2; color: #B91C1C; }
+    .badge.warn { background-color: #FEF9C3; color: #A16207; }
+    code.inline { background-color: var(--md-sys-color-surface-variant); color: var(--md-sys-color-on-surface-variant); padding: 2px 6px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 13px; }
+  </style>
+</head>
+
+<body>
+
+  <header class="app-bar">
+    <a href="index.html" class="icon-button" aria-label="Back to Home">
+      <span class="material-symbols-outlined">home</span>
+    </a>
+    <h1 style="flex-grow: 1; margin-left: 16px;">第4章 ストリームAPI</h1>
+    <button class="icon-button" id="menuBtn" aria-label="Open Table of Contents">
+      <span class="material-symbols-outlined">more_vert</span>
+    </button>
+  </header>
+
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+  <nav class="drawer" id="drawer">
+    <h2>目次</h2>
+    <a href="#overview" class="drawer-link">1. ストリームの概要</a>
+    <a href="#intermediate" class="drawer-link">2. 中間操作</a>
+    <a href="#terminal" class="drawer-link">3. 終端操作</a>
+    <a href="#collectors" class="drawer-link">4. Collectors</a>
+    <a href="#optional" class="drawer-link">5. Optional</a>
+    <a href="#parallel" class="drawer-link">6. ParallelStream</a>
+  </nav>
+
+  <main class="main-content">
+
+    <section id="overview" class="card">
+      <h2 class="section-title">1. ストリームの概要</h2>
+      <h3><span class="material-symbols-outlined">table</span> ストリームの生成方法</h3>
+      <table>
+        <tr><th>生成方法</th><th>コード例</th></tr>
+        <tr><td>コレクションから</td><td><code class="inline">list.stream()</code></td></tr>
+        <tr><td>配列から</td><td><code class="inline">Arrays.stream(array)</code></td></tr>
+        <tr><td>Stream.of()</td><td><code class="inline">Stream.of("a", "b", "c")</code></td></tr>
+        <tr><td>数値範囲</td><td><code class="inline">IntStream.range(0, 10)</code> / <code class="inline">IntStream.rangeClosed(1, 10)</code></td></tr>
+        <tr><td>無限ストリーム</td><td><code class="inline">Stream.iterate(0, n -> n + 1)</code> / <code class="inline">Stream.generate(Math::random)</code></td></tr>
+      </table>
+      <h3><span class="material-symbols-outlined">description</span> ストリームの3つの特徴</h3>
+      <p>
+        ① <strong>一方通行・一度きり：</strong> 一度終端操作を実行したストリームは再利用できません。<br>
+        ② <strong>遅延評価（Lazy Evaluation）：</strong> 終端操作が呼ばれるまで中間操作は実行されません。<br>
+        ③ <strong>元のデータを変更しない：</strong> 元のコレクション自体は変化しません。
+      </p>
+      <div class="code-group">
+        <pre class="code-block">// ストリームのパイプライン: 生成 → 中間操作（複数可） → 終端操作（1つ）
+List&lt;String&gt; names = Arrays.asList("Alice", "Bob", "Charlie", "Dave");
+
+List&lt;String&gt; result = names.stream()        // 1. 生成
+    .filter(s -> s.length() > 3)             // 2. 中間操作（絞り込み）
+    .map(String::toUpperCase)                // 2. 中間操作（変換）
+    .sorted()                                // 2. 中間操作（ソート）
+    .collect(Collectors.toList());           // 3. 終端操作（収集）
+
+System.out.println(result);</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          [ALICE, CHARLIE, DAVE]
+        </div>
+      </div>
+    </section>
+
+    <section id="intermediate" class="card">
+      <h2 class="section-title">2. 中間操作</h2>
+      <h3><span class="material-symbols-outlined">table</span> 主な中間操作一覧</h3>
+      <table>
+        <tr><th>メソッド</th><th>引数</th><th>説明</th></tr>
+        <tr><td><code class="inline">filter(Predicate)</code></td><td>Predicate&lt;T&gt;</td><td>条件に合う要素のみ残す</td></tr>
+        <tr><td><code class="inline">map(Function)</code></td><td>Function&lt;T,R&gt;</td><td>各要素を別の型・値に変換</td></tr>
+        <tr><td><code class="inline">flatMap(Function)</code></td><td>Function&lt;T,Stream&lt;R&gt;&gt;</td><td>ネストしたストリームを平坦化</td></tr>
+        <tr><td><code class="inline">sorted()</code></td><td>なし / Comparator</td><td>自然順序またはカスタム順でソート</td></tr>
+        <tr><td><code class="inline">distinct()</code></td><td>なし</td><td>重複要素を除去</td></tr>
+        <tr><td><code class="inline">limit(long)</code></td><td>long</td><td>先頭n件に絞る</td></tr>
+        <tr><td><code class="inline">skip(long)</code></td><td>long</td><td>先頭n件を読み飛ばす</td></tr>
+        <tr><td><code class="inline">peek(Consumer)</code></td><td>Consumer&lt;T&gt;</td><td>副作用（デバッグ等）を挟む。要素は変化しない</td></tr>
+        <tr><td><code class="inline">mapToInt(ToIntFunction)</code></td><td>ToIntFunction&lt;T&gt;</td><td>IntStreamに変換（sum/average等が使える）</td></tr>
+      </table>
+      <div class="code-group">
+        <pre class="code-block">// flatMap: Listのリストをフラットにする
+List&lt;List&lt;String&gt;&gt; nested = Arrays.asList(
+    Arrays.asList("a", "b"),
+    Arrays.asList("c", "d")
+);
+List&lt;String&gt; flat = nested.stream()
+    .flatMap(List::stream)
+    .collect(Collectors.toList());
+System.out.println("flatMap: " + flat);
+
+// peek: デバッグ用途でストリームの途中を覗く
+List&lt;String&gt; words = Arrays.asList("hello", "world", "java");
+words.stream()
+    .peek(s -> System.out.println("before: " + s))
+    .map(String::toUpperCase)
+    .peek(s -> System.out.println("after:  " + s))
+    .forEach(s -> {}); // 終端操作を呼ぶまでpeekは動かない</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          flatMap: [a, b, c, d]<br>
+          before: hello<br>
+          after:  HELLO<br>
+          before: world<br>
+          after:  WORLD<br>
+          before: java<br>
+          after:  JAVA
+        </div>
+      </div>
+    </section>
+
+    <section id="terminal" class="card">
+      <h2 class="section-title">3. 終端操作</h2>
+      <h3><span class="material-symbols-outlined">table</span> 主な終端操作一覧</h3>
+      <table>
+        <tr><th>メソッド</th><th>戻り値</th><th>説明</th></tr>
+        <tr><td><code class="inline">collect(Collector)</code></td><td>R</td><td>コレクションや文字列等に収集</td></tr>
+        <tr><td><code class="inline">forEach(Consumer)</code></td><td>void</td><td>各要素に処理を実行</td></tr>
+        <tr><td><code class="inline">count()</code></td><td>long</td><td>要素数を返す</td></tr>
+        <tr><td><code class="inline">findFirst()</code></td><td>Optional&lt;T&gt;</td><td>最初の要素を返す</td></tr>
+        <tr><td><code class="inline">findAny()</code></td><td>Optional&lt;T&gt;</td><td>任意の要素を返す（並列処理向け）</td></tr>
+        <tr><td><code class="inline">anyMatch(Predicate)</code></td><td>boolean</td><td>1つでも条件を満たすか</td></tr>
+        <tr><td><code class="inline">allMatch(Predicate)</code></td><td>boolean</td><td>全要素が条件を満たすか</td></tr>
+        <tr><td><code class="inline">noneMatch(Predicate)</code></td><td>boolean</td><td>全要素が条件を満たさないか</td></tr>
+        <tr><td><code class="inline">reduce(identity, BinaryOperator)</code></td><td>T</td><td>要素を集約して1つの値にする</td></tr>
+        <tr><td><code class="inline">min/max(Comparator)</code></td><td>Optional&lt;T&gt;</td><td>最小/最大値を返す</td></tr>
+        <tr><td><code class="inline">toArray()</code></td><td>Object[]</td><td>配列に変換する</td></tr>
+      </table>
+      <div class="code-group">
+        <pre class="code-block">List&lt;Integer&gt; nums = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+
+System.out.println("count:    " + nums.stream().count());
+System.out.println("anyMatch: " + nums.stream().anyMatch(n -> n > 9));
+System.out.println("allMatch: " + nums.stream().allMatch(n -> n > 0));
+System.out.println("min:      " + nums.stream().min(Integer::compareTo).get());
+System.out.println("max:      " + nums.stream().max(Integer::compareTo).get());
+
+// reduce: 初期値0から始めて全要素を足し合わせる
+int sum = nums.stream().reduce(0, (a, b) -> a + b);
+System.out.println("reduce sum: " + sum);</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          count:    10<br>
+          anyMatch: true<br>
+          allMatch: true<br>
+          min:      1<br>
+          max:      10<br>
+          reduce sum: 55
+        </div>
+      </div>
+    </section>
+
+    <section id="collectors" class="card">
+      <h2 class="section-title">4. Collectors</h2>
+      <h3><span class="material-symbols-outlined">table</span> 主なCollectorsメソッド一覧</h3>
+      <table>
+        <tr><th>メソッド</th><th>戻り値</th><th>説明</th></tr>
+        <tr><td><code class="inline">toList()</code></td><td>List&lt;T&gt;</td><td>Listに収集</td></tr>
+        <tr><td><code class="inline">toSet()</code></td><td>Set&lt;T&gt;</td><td>Setに収集（重複除去）</td></tr>
+        <tr><td><code class="inline">toMap(keyMapper, valueMapper)</code></td><td>Map&lt;K,V&gt;</td><td>Mapに収集</td></tr>
+        <tr><td><code class="inline">joining(delimiter)</code></td><td>String</td><td>文字列として連結</td></tr>
+        <tr><td><code class="inline">groupingBy(classifier)</code></td><td>Map&lt;K,List&lt;T&gt;&gt;</td><td>グループ分け</td></tr>
+        <tr><td><code class="inline">partitioningBy(Predicate)</code></td><td>Map&lt;Boolean,List&lt;T&gt;&gt;</td><td>true/falseの2グループに分割</td></tr>
+        <tr><td><code class="inline">counting()</code></td><td>Long</td><td>件数をカウント（groupingByと組み合わせ多い）</td></tr>
+        <tr><td><code class="inline">summarizingInt(ToIntFunction)</code></td><td>IntSummaryStatistics</td><td>count/sum/min/max/avgをまとめて取得</td></tr>
+      </table>
+      <div class="code-group">
+        <pre class="code-block">List&lt;String&gt; fruits = Arrays.asList("apple", "banana", "avocado", "cherry", "blueberry");
+
+// joining: 文字列結合
+String joined = fruits.stream().collect(Collectors.joining(", ", "[", "]"));
+System.out.println("joining: " + joined);
+
+// groupingBy: 頭文字でグループ化
+Map&lt;Character, List&lt;String&gt;&gt; grouped = fruits.stream()
+    .collect(Collectors.groupingBy(s -> s.charAt(0)));
+System.out.println("groupingBy: " + grouped);
+
+// partitioningBy: 6文字以上かで2分
+Map&lt;Boolean, List&lt;String&gt;&gt; partitioned = fruits.stream()
+    .collect(Collectors.partitioningBy(s -> s.length() >= 6));
+System.out.println("partitioningBy: " + partitioned);</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          joining: [apple, banana, avocado, cherry, blueberry]<br>
+          groupingBy: {a=[apple, avocado], b=[banana, blueberry], c=[cherry]}<br>
+          partitioningBy: {false=[apple], true=[banana, avocado, cherry, blueberry]}
+        </div>
+      </div>
+    </section>
+
+    <section id="optional" class="card">
+      <h2 class="section-title">5. Optional&lt;T&gt;</h2>
+      <h3><span class="material-symbols-outlined">table</span> 主なOptionalのメソッド比較</h3>
+      <table>
+        <tr><th>メソッド</th><th>値がある場合</th><th>値がない場合（空）</th></tr>
+        <tr><td><code class="inline">get()</code></td><td>値を返す</td><td><span class="badge ng">NoSuchElementException</span></td></tr>
+        <tr><td><code class="inline">orElse(T)</code></td><td>値を返す</td><td>引数の値を返す</td></tr>
+        <tr><td><code class="inline">orElseGet(Supplier)</code></td><td>値を返す</td><td>Supplierの結果を返す（遅延評価）</td></tr>
+        <tr><td><code class="inline">orElseThrow(Supplier)</code></td><td>値を返す</td><td>指定した例外をスロー</td></tr>
+        <tr><td><code class="inline">ifPresent(Consumer)</code></td><td>Consumerを実行</td><td>何もしない</td></tr>
+        <tr><td><code class="inline">isPresent()</code></td><td>true</td><td>false</td></tr>
+        <tr><td><code class="inline">filter(Predicate)</code></td><td>条件次第でOptional返却</td><td>空のOptionalを返す</td></tr>
+        <tr><td><code class="inline">map(Function)</code></td><td>変換後のOptionalを返す</td><td>空のOptionalを返す</td></tr>
+      </table>
+      <div class="code-group">
+        <pre class="code-block">// Optional.of(): nullを渡すとNullPointerException
+// Optional.ofNullable(): nullを渡すと空のOptionalになる
+Optional&lt;String&gt; opt1 = Optional.of("Hello");
+Optional&lt;String&gt; opt2 = Optional.ofNullable(null);
+Optional&lt;String&gt; opt3 = Optional.empty();
+
+System.out.println(opt1.orElse("default"));     // Hello
+System.out.println(opt2.orElse("default"));     // default
+System.out.println(opt3.isPresent());           // false
+
+// ifPresent: 値があれば実行
+opt1.ifPresent(s -> System.out.println("Value: " + s));
+
+// map + orElse: 変換チェーン
+String result = opt1.map(String::toUpperCase).orElse("empty");
+System.out.println("mapped: " + result);</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          Hello<br>
+          default<br>
+          false<br>
+          Value: Hello<br>
+          mapped: HELLO
+        </div>
+      </div>
+    </section>
+
+    <section id="parallel" class="card">
+      <h2 class="section-title">6. ParallelStream（並列ストリーム）</h2>
+      <h3><span class="material-symbols-outlined">table</span> stream() vs parallelStream() 比較</h3>
+      <table>
+        <tr><th></th><th>stream()</th><th>parallelStream()</th></tr>
+        <tr><td>実行スレッド</td><td>呼び出し元スレッドのみ</td><td>ForkJoinPool（複数スレッド）</td></tr>
+        <tr><td>順序の保証</td><td><span class="badge ok">保証される</span></td><td><span class="badge ng">保証されない</span></td></tr>
+        <tr><td>適しているケース</td><td>小さなデータ、順序が重要な処理</td><td>大量データの重い計算処理</td></tr>
+        <tr><td>副作用（状態変更）</td><td>比較的安全</td><td><span class="badge warn">危険（競合状態に注意）</span></td></tr>
+      </table>
+      <h3><span class="material-symbols-outlined">description</span> 並列ストリームの注意点</h3>
+      <p>並列ストリームは自動的に複数スレッドで処理されるため、<strong>副作用を含む操作（外部リストへのadd等）はスレッドセーフにならない</strong>ため危険です。<code class="inline">collect()</code> 等の安全な終端操作を使いましょう。</p>
+      <div class="code-group">
+        <pre class="code-block">List&lt;Integer&gt; numbers = IntStream.rangeClosed(1, 10)
+    .boxed()
+    .collect(Collectors.toList());
+
+// 並列で合計を計算（reduceは並列でも安全）
+int sum = numbers.parallelStream()
+    .reduce(0, Integer::sum);
+System.out.println("並列sum: " + sum);
+
+// 順序が保証されないforEach
+System.out.print("並列forEach: ");
+numbers.parallelStream().forEach(n -> System.out.print(n + " "));
+
+// 順序を保証するforEachOrdered
+System.out.print("\n順序保証forEach: ");
+numbers.parallelStream().forEachOrdered(n -> System.out.print(n + " "));</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          並列sum: 55<br>
+          並列forEach: 6 7 8 9 10 1 2 3 4 5 (順序は不定)<br>
+          順序保証forEach: 1 2 3 4 5 6 7 8 9 10
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    const menuBtn = document.getElementById('menuBtn');
+    const drawer = document.getElementById('drawer');
+    const overlay = document.getElementById('drawerOverlay');
+    const drawerLinks = document.querySelectorAll('.drawer-link');
+    function toggleDrawer() { drawer.classList.toggle('open'); overlay.classList.toggle('open'); }
+    menuBtn.addEventListener('click', toggleDrawer);
+    overlay.addEventListener('click', toggleDrawer);
+    drawerLinks.forEach(link => { link.addEventListener('click', () => { drawer.classList.remove('open'); overlay.classList.remove('open'); }); });
+  </script>
+</body>
+
+</html>

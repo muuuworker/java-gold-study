@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第1章 クラスとインタフェース | Java Gold SE17</title>
+
+  <!-- Fonts & Icons for Material Design 3 -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Fira+Code&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+
+  <style>
+    /* Material Design 3 Light Theme Tokens */
+    :root {
+      --md-sys-color-primary: #6750A4;
+      --md-sys-color-on-primary: #FFFFFF;
+      --md-sys-color-primary-container: #EADDFF;
+      --md-sys-color-on-primary-container: #21005D;
+      --md-sys-color-secondary-container: #E8DEF8;
+      --md-sys-color-on-secondary-container: #1D192B;
+      --md-sys-color-surface: #FEF7FF;
+      --md-sys-color-on-surface: #1C1B1F;
+      --md-sys-color-surface-variant: #E7E0EC;
+      --md-sys-color-on-surface-variant: #49454F;
+      --md-sys-color-outline: #79747E;
+      --md-sys-color-outline-variant: #CAC4D0;
+      --md-sys-color-background: #FEF7FF;
+    }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: var(--md-sys-color-background);
+      color: var(--md-sys-color-on-surface);
+      margin: 0;
+      padding: 0;
+      line-height: 1.6;
+    }
+
+    /* Top App Bar */
+    .app-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 24px;
+      background-color: var(--md-sys-color-surface);
+      color: var(--md-sys-color-on-surface);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    }
+
+    .app-bar h1 {
+      font-size: 20px;
+      font-weight: 500;
+      margin: 0;
+      color: var(--md-sys-color-primary);
+    }
+
+    .icon-button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--md-sys-color-on-surface-variant);
+      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.2s;
+    }
+
+    .icon-button:hover {
+      background-color: var(--md-sys-color-surface-variant);
+    }
+
+    /* Navigation Drawer (Right Side) */
+    .drawer {
+      position: fixed;
+      top: 0;
+      right: -320px;
+      width: 300px;
+      height: 100vh;
+      background-color: var(--md-sys-color-surface);
+      border-left: 1px solid var(--md-sys-color-outline-variant);
+      transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 20;
+      padding: 24px 12px;
+      overflow-y: auto;
+    }
+
+    .drawer.open {
+      right: 0;
+    }
+
+    .drawer-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.3);
+      z-index: 15;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .drawer-overlay.open {
+      display: block;
+      opacity: 1;
+    }
+
+    .drawer h2 {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--md-sys-color-on-surface-variant);
+      padding: 0 16px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .drawer a {
+      display: block;
+      padding: 16px;
+      color: var(--md-sys-color-on-surface);
+      text-decoration: none;
+      border-radius: 28px;
+      font-weight: 500;
+      margin-bottom: 4px;
+      transition: background-color 0.2s;
+    }
+
+    .drawer a:hover {
+      background-color: var(--md-sys-color-secondary-container);
+      color: var(--md-sys-color-on-secondary-container);
+    }
+
+    /* Main Content */
+    .main-content {
+      max-width: 900px;
+      margin: 32px auto;
+      padding: 0 24px;
+    }
+
+    .card {
+      background-color: var(--md-sys-color-surface);
+      border: 1px solid var(--md-sys-color-outline-variant);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 32px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    h2.section-title {
+      color: var(--md-sys-color-primary);
+      font-size: 22px;
+      margin-top: 0;
+      margin-bottom: 16px;
+      font-weight: 500;
+      border-bottom: 2px solid var(--md-sys-color-primary-container);
+      padding-bottom: 8px;
+    }
+
+    h3 {
+      font-size: 18px;
+      font-weight: 500;
+      margin-top: 32px;
+      margin-bottom: 12px;
+      color: var(--md-sys-color-on-surface);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h3 .material-symbols-outlined {
+      color: var(--md-sys-color-primary);
+      font-size: 20px;
+    }
+
+    p {
+      color: var(--md-sys-color-on-surface-variant);
+      margin-bottom: 16px;
+    }
+
+    /* Code and Output Grouping */
+    .code-group {
+      margin: 16px 0 32px 0;
+      border: 1px solid var(--md-sys-color-outline-variant);
+      border-radius: 8px;
+      overflow: hidden;
+      background-color: #FAFAFA;
+    }
+
+    .code-block {
+      margin: 0;
+      padding: 16px;
+      font-family: 'Fira Code', monospace;
+      font-size: 14px;
+      overflow-x: auto;
+      color: #333;
+    }
+
+    .output-block {
+      background-color: #F0FDF4;
+      /* Light Green */
+      margin: 0;
+      padding: 12px 16px;
+      font-family: 'Fira Code', monospace;
+      font-size: 14px;
+      color: #166534;
+      border-top: 1px solid #BBF7D0;
+    }
+
+    .output-label {
+      font-weight: 700;
+      font-size: 12px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #15803D;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Tables */
+    table {
+      display: block;
+      overflow-x: auto;
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px 0;
+      font-size: 14px;
+    }
+
+    th,
+    td {
+      border: 1px solid var(--md-sys-color-outline-variant);
+      padding: 12px 16px;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    th {
+      background-color: var(--md-sys-color-surface-variant);
+      color: var(--md-sys-color-on-surface-variant);
+      font-weight: 500;
+    }
+
+    /* Badges & Inline Code */
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .badge.ok {
+      background-color: #DCFCE7;
+      color: #15803D;
+    }
+
+    .badge.ng {
+      background-color: #FEE2E2;
+      color: #B91C1C;
+    }
+
+    .badge.warn {
+      background-color: #FEF9C3;
+      color: #A16207;
+    }
+
+    code.inline {
+      background-color: var(--md-sys-color-surface-variant);
+      color: var(--md-sys-color-on-surface-variant);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Fira Code', monospace;
+      font-size: 13px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Top App Bar -->
+  <header class="app-bar">
+    <a href="index.html" class="icon-button" aria-label="Back to Home" style="text-decoration: none;">
+      <span class="material-symbols-outlined">home</span>
+    </a>
+    <h1 style="flex-grow: 1; margin-left: 16px;">第1章 クラスとインタフェース</h1>
+    <button class="icon-button" id="menuBtn" aria-label="Open Table of Contents">
+      <span class="material-symbols-outlined">more_vert</span>
+    </button>
+  </header>
+
+  <!-- Right Navigation Drawer -->
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+  <nav class="drawer" id="drawer">
+    <h2>目次</h2>
+    <a href="#record" class="drawer-link">1. レコードクラス</a>
+    <a href="#sealed" class="drawer-link">2. シールドクラス</a>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main-content">
+
+    <section id="record" class="card">
+      <h2 class="section-title">1. レコードクラス (Record Classes)</h2>
+
+      <h3><span class="material-symbols-outlined">table</span> 従来のクラスとレコードクラスの比較</h3>
+      <table>
+        <tr>
+          <th>特徴</th>
+          <th>従来のクラス (POJO)</th>
+          <th>レコードクラス</th>
+        </tr>
+        <tr>
+          <td>ボイラープレート</td>
+          <td>ゲッター、セッター、equals等を全て記述</td>
+          <td><span class="badge ok">不要</span>（自動生成される）</td>
+        </tr>
+        <tr>
+          <td>不変性</td>
+          <td>フィールドに final を付ける必要あり</td>
+          <td><span class="badge ok">強制的に不変</span>（暗黙の private final）</td>
+        </tr>
+        <tr>
+          <td>継承 (extends)</td>
+          <td>自由</td>
+          <td><span class="badge ng">不可</span>（Recordクラスを暗黙的に継承）</td>
+        </tr>
+        <tr>
+          <td>インタフェース実装</td>
+          <td>可</td>
+          <td><span class="badge ok">可</span></td>
+        </tr>
+        <tr>
+          <td>フィールド取得</td>
+          <td><code class="inline">getName()</code> のような命名が一般的</td>
+          <td><code class="inline">name()</code> のように括弧のみ</td>
+        </tr>
+      </table>
+
+      <h3><span class="material-symbols-outlined">description</span> データを保持するクラスを簡潔に定義</h3>
+      <p>Java 16で正式追加された機能です。<br>
+        DTO（Data Transfer Object）など、データを格納して運ぶだけのクラスを作る際、記述量を劇的に減らすことができます。<br>
+        コンパイラが自動的に <code class="inline">equals()</code>, <code class="inline">hashCode()</code>, <code
+          class="inline">toString()</code>、コンストラクタ、および各フィールドのアクセッサメソッドを生成してくれます。<br>
+        <strong>試験対策のポイント：</strong>レコードクラス自体は暗黙的に <code class="inline">final</code> であり、他のクラスを継承することはできません。
+      </p>
+
+      <div class="code-group">
+        <pre class="code-block">// レコードクラスの定義 (これだけでコンストラクタや各種メソッドが生成される)
+public record Person(String name, int age) {
+    // 必須ではないが、コンパクトコンストラクタで値の検証が可能
+    public Person {
+        if (age < 0) {
+            throw new IllegalArgumentException("Age cannot be negative");
+        }
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Person p1 = new Person("Alice", 30);
+        Person p2 = new Person("Alice", 30);
+        
+        // アクセッサメソッドは get~ ではなく フィールド名()
+        System.out.println("Name: " + p1.name() + ", Age: " + p1.age());
+        
+        // toString() が自動生成され、見やすい形式で出力される
+        System.out.println("toString: " + p1);
+        
+        // equals() もフィールドの同値性で自動比較される
+        System.out.println("p1.equals(p2): " + p1.equals(p2));
+    }
+}</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span>
+            Output</span>
+          Name: Alice, Age: 30<br>
+          toString: Person[name=Alice, age=30]<br>
+          p1.equals(p2): true
+        </div>
+      </div>
+    </section>
+
+    <section id="sealed" class="card">
+      <h2 class="section-title">2. シールドクラス (Sealed Classes)</h2>
+
+      <h3><span class="material-symbols-outlined">table</span> サブクラスに必須な修飾子の比較</h3>
+      <p>シールドクラスを継承するサブクラスは、必ず以下の<strong>いずれかの修飾子</strong>を付けなければなりません。</p>
+      <table>
+        <tr>
+          <th>修飾子</th>
+          <th>意味</th>
+          <th>継承の制限状態</th>
+        </tr>
+        <tr>
+          <td><code class="inline">final</code></td>
+          <td>これ以上、別のクラスに継承させない</td>
+          <td>完全にクローズ</td>
+        </tr>
+        <tr>
+          <td><code class="inline">sealed</code></td>
+          <td>さらに <code class="inline">permits</code> を使って継承先を制限する</td>
+          <td>制限を継続</td>
+        </tr>
+        <tr>
+          <td><code class="inline">non-sealed</code></td>
+          <td>継承の制限を解除する</td>
+          <td>完全にオープン（誰でも継承可）</td>
+        </tr>
+      </table>
+
+      <h3><span class="material-symbols-outlined">description</span> 継承できるクラスを厳密に制限する</h3>
+      <p>クラスやインタフェースの継承を特定のクラスのみに許可する仕組みです。<code class="inline">sealed</code> 修飾子と <code class="inline">permits</code>
+        キーワードを使用します。<br>
+        無秩序なクラスの拡張を防ぐことができ、パターンマッチングと組み合わせた際に「網羅性（すべてのサブクラスのパターンをカバーしているか）」をコンパイラがチェックできるようになります。<br>
+        <strong>試験対策のポイント：</strong>許可されたサブクラスは、必ず同一モジュール（名前なしモジュールの場合は同一パッケージ）内に存在しなければなりません。
+      </p>
+
+      <div class="code-group">
+        <pre class="code-block">// 親クラス：Circle と Square にのみ継承を許可
+public sealed class Shape permits Circle, Square {}
+
+// 子クラス1：これ以上継承させない (final)
+public final class Circle extends Shape {
+    public void draw() { System.out.println("Drawing a Circle"); }
+}
+
+// 子クラス2：制限を解除し、誰でも継承可能にする (non-sealed)
+public non-sealed class Square extends Shape {
+    public void draw() { System.out.println("Drawing a Square"); }
+}
+
+// （参考）Squareは non-sealed なので、さらに別のクラスが継承可能
+public class ColoredSquare extends Square {}
+
+public class Main {
+    public static void main(String[] args) {
+        Shape circle = new Circle();
+        Shape square = new Square();
+        
+        System.out.println("Circle class: " + circle.getClass().getSimpleName());
+        System.out.println("Square class: " + square.getClass().getSimpleName());
+    }
+}</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span>
+            Output</span>
+          Circle class: Circle<br>
+          Square class: Square
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    const menuBtn = document.getElementById('menuBtn');
+    const drawer = document.getElementById('drawer');
+    const overlay = document.getElementById('drawerOverlay');
+    const drawerLinks = document.querySelectorAll('.drawer-link');
+
+    function toggleDrawer() {
+      drawer.classList.toggle('open');
+      overlay.classList.toggle('open');
+    }
+
+    menuBtn.addEventListener('click', toggleDrawer);
+    overlay.addEventListener('click', toggleDrawer);
+
+    // リンククリック時にドロワーを閉じる
+    drawerLinks.forEach(link => {
+      link.addEventListener('click', () => {
+        if (drawer.classList.contains('open')) {
+          toggleDrawer();
+        }
+      });
+    });
+  </script>
+</body>
+
+</html>

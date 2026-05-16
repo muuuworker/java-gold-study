@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第11章 モジュール・システム | Java Gold SE17</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Fira+Code&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+  <style>
+    :root { --md-sys-color-primary: #6750A4; --md-sys-color-primary-container: #EADDFF; --md-sys-color-secondary-container: #E8DEF8; --md-sys-color-on-secondary-container: #1D192B; --md-sys-color-surface: #FEF7FF; --md-sys-color-on-surface: #1C1B1F; --md-sys-color-surface-variant: #E7E0EC; --md-sys-color-on-surface-variant: #49454F; --md-sys-color-outline-variant: #CAC4D0; --md-sys-color-background: #FEF7FF; }
+    body { font-family: 'Roboto', sans-serif; background-color: var(--md-sys-color-background); color: var(--md-sys-color-on-surface); margin: 0; padding: 0; line-height: 1.6; }
+    .app-bar { display: flex; align-items: center; padding: 12px 24px; background-color: var(--md-sys-color-surface); position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--md-sys-color-outline-variant); }
+    .app-bar h1 { font-size: 20px; font-weight: 500; margin: 0; color: var(--md-sys-color-primary); flex-grow: 1; margin-left: 16px; }
+    .icon-button { background: none; border: none; cursor: pointer; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: background-color 0.2s; text-decoration: none; color: var(--md-sys-color-on-surface); }
+    .icon-button:hover { background-color: var(--md-sys-color-surface-variant); }
+    .drawer { position: fixed; top: 0; right: -280px; width: 280px; height: 100vh; background-color: var(--md-sys-color-surface); z-index: 20; transition: right 0.3s ease; padding: 24px 12px; overflow-y: auto; box-shadow: -2px 0 8px rgba(0,0,0,0.1); }
+    .drawer.open { right: 0; }
+    .drawer-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); z-index: 15; display: none; }
+    .drawer-overlay.open { display: block; }
+    .drawer h2 { font-size: 14px; font-weight: 500; color: var(--md-sys-color-on-surface-variant); margin: 0 0 12px 16px; text-transform: uppercase; }
+    .drawer a { display: block; padding: 16px; border-radius: 12px; color: var(--md-sys-color-on-surface); text-decoration: none; font-size: 14px; margin-bottom: 4px; transition: background-color 0.2s; }
+    .drawer a:hover { background-color: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
+    .main-content { max-width: 900px; margin: 32px auto; padding: 0 24px; }
+    .card { background-color: var(--md-sys-color-surface); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 16px; padding: 24px; margin-bottom: 32px; }
+    h2.section-title { color: var(--md-sys-color-primary); font-size: 22px; font-weight: 700; margin: 0 0 20px 0; border-bottom: 2px solid var(--md-sys-color-primary-container); padding-bottom: 8px; }
+    h3 { font-size: 18px; font-weight: 500; margin: 24px 0 12px 0; display: flex; align-items: center; gap: 8px; }
+    h3 .material-symbols-outlined { color: var(--md-sys-color-primary); font-size: 20px; }
+    p { color: var(--md-sys-color-on-surface-variant); margin-bottom: 16px; }
+    .code-group { border: 1px solid var(--md-sys-color-outline-variant); border-radius: 12px; overflow: hidden; background-color: #FAFAFA; margin-bottom: 20px; }
+    .code-block { margin: 0; padding: 16px; font-family: 'Fira Code', monospace; font-size: 13px; line-height: 1.7; overflow-x: auto; color: #333; }
+    table { display: block; overflow-x: auto; border-collapse: collapse; margin: 16px 0 24px 0; font-size: 14px; }
+    th, td { border: 1px solid var(--md-sys-color-outline-variant); padding: 12px 16px; text-align: left; white-space: nowrap; }
+    th { background-color: var(--md-sys-color-surface-variant); color: var(--md-sys-color-on-surface-variant); font-weight: 500; }
+    td { white-space: normal; min-width: 150px; }
+    code.inline { background-color: var(--md-sys-color-surface-variant); color: var(--md-sys-color-on-surface-variant); padding: 2px 6px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 13px; white-space: nowrap; }
+  </style>
+</head>
+<body>
+  <header class="app-bar">
+    <a href="index.html" class="icon-button"><span class="material-symbols-outlined">home</span></a>
+    <h1>第11章 モジュール・システム</h1>
+    <button class="icon-button" id="menuBtn"><span class="material-symbols-outlined">more_vert</span></button>
+  </header>
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+  <nav class="drawer" id="drawer">
+    <h2>目次</h2>
+    <a href="#overview" class="drawer-link">1. モジュールとは</a>
+    <a href="#module-info" class="drawer-link">2. module-info.java</a>
+    <a href="#directives" class="drawer-link">3. モジュール宣言のキーワード</a>
+    <a href="#commands" class="drawer-link">4. コンパイル・実行コマンド</a>
+    <a href="#jdeps" class="drawer-link">5. jdeps と ServiceLoader</a>
+  </nav>
+
+  <main class="main-content">
+
+    <section id="overview" class="card">
+      <h2 class="section-title">1. モジュールとは</h2>
+      <p>Java 9で導入されたモジュール・システム（Project Jigsaw）は、パッケージをまとめた<strong>より大きな単位</strong>です。モジュールは<strong>何に依存するか（requires）</strong>と<strong>何を公開するか（exports）</strong>を明示的に宣言します。</p>
+      <h3><span class="material-symbols-outlined">table</span> モジュールシステム導入のメリット</h3>
+      <table>
+        <tr><th>メリット</th><th>説明</th></tr>
+        <tr><td>強力なカプセル化</td><td>exportsしていないパッケージは外部から一切アクセスできない（publicクラスでも不可）</td></tr>
+        <tr><td>明示的な依存宣言</td><td>依存関係が module-info.java に可視化されるため、循環依存を検出しやすい</td></tr>
+        <tr><td>軽量なランタイム</td><td>jlinkで必要なモジュールだけを含むカスタムJREを作成できる</td></tr>
+      </table>
+    </section>
+
+    <section id="module-info" class="card">
+      <h2 class="section-title">2. module-info.java</h2>
+      <p>モジュールのルートディレクトリに置く特別なファイルです。このファイル1つでモジュール全体の依存・公開を制御します。</p>
+      <div class="code-group">
+        <pre class="code-block">// ファイル名: module-info.java (モジュールのソースルートに配置)
+module com.example.myapp {
+
+    // 依存するモジュールを宣言
+    requires java.sql;           // JDBCを使うため
+    requires java.logging;       // ログAPIを使うため
+    requires transitive java.xml; // このモジュールに依存する他モジュールにもjava.xmlが見える
+
+    // 外部に公開するパッケージを宣言
+    exports com.example.api;           // 全モジュールに公開
+    exports com.example.utils to com.example.client; // 特定モジュールにのみ公開
+
+    // ServiceLoaderの設定
+    uses com.example.spi.MyPlugin;   // このインタフェースの実装を検索
+    provides com.example.spi.MyPlugin  // このモジュールが実装を提供
+        with com.example.impl.MyPluginImpl;
+
+    // リフレクションアクセスを許可
+    opens com.example.model;          // 実行時リフレクションを全モジュールに許可
+    opens com.example.dto to com.google.gson; // 特定モジュールにのみ許可
+}</pre>
+      </div>
+    </section>
+
+    <section id="directives" class="card">
+      <h2 class="section-title">3. モジュール宣言のキーワード一覧</h2>
+      <table>
+        <tr><th>キーワード</th><th>役割</th><th>補足</th></tr>
+        <tr><td><code class="inline">requires X</code></td><td>モジュールXへの依存を宣言</td><td>コンパイル時・実行時の依存</td></tr>
+        <tr><td><code class="inline">requires transitive X</code></td><td>推移的依存。自分に依存する側にもXが見える</td><td>APIの再公開に使う</td></tr>
+        <tr><td><code class="inline">requires static X</code></td><td>コンパイル時のみの依存</td><td>実行時はなくてもよい（アノテーション等）</td></tr>
+        <tr><td><code class="inline">exports パッケージ</code></td><td>パッケージを全モジュールに公開</td><td>publicクラスのみアクセス可</td></tr>
+        <tr><td><code class="inline">exports パッケージ to M</code></td><td>パッケージをモジュールMのみに公開</td><td>限定公開</td></tr>
+        <tr><td><code class="inline">opens パッケージ</code></td><td>パッケージをリフレクションに対して開放</td><td>実行時のみ。フレームワーク（Spring等）向け</td></tr>
+        <tr><td><code class="inline">uses インタフェース</code></td><td>ServiceLoaderでこのインタフェースの実装を検索</td><td>SPI（サービス提供インタフェース）の消費側</td></tr>
+        <tr><td><code class="inline">provides I with C</code></td><td>インタフェースIの実装Cを提供</td><td>SPI（サービス提供インタフェース）の提供側</td></tr>
+      </table>
+    </section>
+
+    <section id="commands" class="card">
+      <h2 class="section-title">4. コンパイル・実行コマンド</h2>
+      <div class="code-group">
+        <pre class="code-block"># ディレクトリ構成例
+# src/
+#   com.example.myapp/
+#     module-info.java
+#     com/example/myapp/Main.java
+
+# コンパイル: -d でクラス出力先, --module-source-path でソース検索先を指定
+javac -d mods --module-source-path src \
+      src/com.example.myapp/module-info.java \
+      src/com.example.myapp/com/example/myapp/Main.java
+
+# 実行: --module-path でモジュール格納ディレクトリ, -m でモジュール名/メインクラス
+java --module-path mods -m com.example.myapp/com.example.myapp.Main
+
+# モジュールJARの作成
+jar --create --file=myapp.jar --main-class=com.example.myapp.Main \
+    -C mods/com.example.myapp .
+
+# カスタムランタイムイメージの作成 (jlink)
+jlink --module-path mods --add-modules com.example.myapp \
+      --output myapp-runtime</pre>
+      </div>
+    </section>
+
+    <section id="jdeps" class="card">
+      <h2 class="section-title">5. jdeps と ServiceLoader</h2>
+      <h3><span class="material-symbols-outlined">description</span> jdeps コマンド</h3>
+      <p><code class="inline">jdeps</code> はクラスファイル・JARの<strong>依存関係を解析するツール</strong>です。モジュールシステムへの移行を支援したり、どのJDKモジュールに依存しているかを確認するために使います。</p>
+      <div class="code-group">
+        <pre class="code-block"># JARの依存関係をモジュールレベルで表示
+jdeps --module-path mods myapp.jar
+
+# クラスの依存先JDKモジュールを一覧表示
+jdeps --list-deps myapp.jar
+
+# モジュール依存グラフをDOT形式で出力
+jdeps --module-path mods -dotoutput ./graph myapp.jar</pre>
+      </div>
+      <h3><span class="material-symbols-outlined">description</span> ServiceLoader</h3>
+      <p>ServiceLoaderは、インタフェースの実装を<strong>動的にロードするSPI（サービス提供インタフェース）の仕組み</strong>です。モジュールシステムでは <code class="inline">uses</code> / <code class="inline">provides</code> と組み合わせて使います。</p>
+      <div class="code-group">
+        <pre class="code-block">// 1. インタフェースを定義（com.example.spiモジュール）
+public interface Greeter {
+    String greet(String name);
+}
+
+// 2. 実装を提供（com.example.implモジュール のmodule-info.java）
+// provides com.example.spi.Greeter with com.example.impl.JapaneseGreeter;
+
+// 3. 消費側（com.example.appモジュール）でServiceLoaderを使って実装を取得
+ServiceLoader&lt;Greeter&gt; loader = ServiceLoader.load(Greeter.class);
+for (Greeter greeter : loader) {
+    System.out.println(greeter.greet("Alice"));
+}
+// または
+loader.findFirst().ifPresent(g -> System.out.println(g.greet("Bob")));</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          こんにちは, Alice！<br>
+          こんにちは, Bob！
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    const menuBtn = document.getElementById('menuBtn');
+    const drawer = document.getElementById('drawer');
+    const overlay = document.getElementById('drawerOverlay');
+    function toggleDrawer() { drawer.classList.toggle('open'); overlay.classList.toggle('open'); }
+    menuBtn.addEventListener('click', toggleDrawer);
+    overlay.addEventListener('click', toggleDrawer);
+    document.querySelectorAll('.drawer-link').forEach(l => l.addEventListener('click', () => { drawer.classList.remove('open'); overlay.classList.remove('open'); }));
+  </script>
+</body>
+</html>

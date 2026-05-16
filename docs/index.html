@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Java Gold SE17 学習ダッシュボード</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+  
+  <style>
+    :root {
+      --md-sys-color-primary: #6750A4;
+      --md-sys-color-on-primary: #FFFFFF;
+      --md-sys-color-primary-container: #EADDFF;
+      --md-sys-color-on-primary-container: #21005D;
+      --md-sys-color-surface: #FEF7FF;
+      --md-sys-color-on-surface: #1C1B1F;
+      --md-sys-color-surface-variant: #E7E0EC;
+      --md-sys-color-on-surface-variant: #49454F;
+      --md-sys-color-outline-variant: #CAC4D0;
+      --md-sys-color-background: #FEF7FF;
+    }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: var(--md-sys-color-background);
+      color: var(--md-sys-color-on-surface);
+      margin: 0;
+      padding: 0;
+    }
+
+    .app-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 24px;
+      background-color: var(--md-sys-color-surface);
+      border-bottom: 1px solid var(--md-sys-color-outline-variant);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .app-bar h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 500;
+      color: var(--md-sys-color-primary);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .main-content {
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 24px;
+    }
+
+    .dashboard-title {
+      font-size: 18px;
+      color: var(--md-sys-color-on-surface-variant);
+      margin-bottom: 24px;
+    }
+
+    .chapter-list {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    .chapter-card {
+      display: flex;
+      align-items: center;
+      padding: 24px;
+      background-color: var(--md-sys-color-surface);
+      border: 1px solid var(--md-sys-color-outline-variant);
+      border-radius: 16px;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .chapter-card:hover {
+      background-color: var(--md-sys-color-primary-container);
+      border-color: var(--md-sys-color-primary);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .chapter-icon {
+      font-size: 40px;
+      color: var(--md-sys-color-primary);
+      margin-right: 24px;
+      background-color: var(--md-sys-color-surface-variant);
+      border-radius: 12px;
+      padding: 12px;
+    }
+
+    .chapter-card:hover .chapter-icon {
+      background-color: var(--md-sys-color-surface);
+    }
+
+    .chapter-info h2 {
+      margin: 0 0 8px 0;
+      font-size: 20px;
+      font-weight: 500;
+    }
+
+    .chapter-info p {
+      margin: 0;
+      font-size: 14px;
+      color: var(--md-sys-color-on-surface-variant);
+    }
+  </style>
+</head>
+<body>
+  <header class="app-bar">
+    <h1>
+      <span class="material-symbols-outlined" style="font-size: 32px;">school</span>
+      Java Gold SE17 Study Hub
+    </h1>
+  </header>
+
+  <main class="main-content">
+    <p class="dashboard-title">学習するチャプターを選択してください</p>
+    
+    <div class="chapter-list">
+      <a href="chapter01.html" class="chapter-card">
+        <span class="material-symbols-outlined chapter-icon">code_blocks</span>
+        <div class="chapter-info">
+          <h2>第1章: クラスとインタフェース</h2>
+          <p>レコードクラス、シールドクラスの仕組みと継承の制約について</p>
+        </div>
+      </a>
+
+      <a href="chapter02.html" class="chapter-card">
+        <span class="material-symbols-outlined chapter-icon">functions</span>
+        <div class="chapter-info">
+          <h2>第2章: 関数型インタフェースとラムダ式</h2>
+          <p>4大関数型インタフェース、メソッド参照、効果的にfinal、プリミティブ特化型について</p>
+        </div>
+      </a>
+
+      <a href="chapter03.html" class="chapter-card">
+        <span class="material-symbols-outlined chapter-icon">sync</span>
+        <div class="chapter-info">
+          <h2>第3章: 並列処理</h2>
+          <p>Thread、ExecutorService、Callable/Future、synchronized、Atomicクラス、スレッドセーフなコレクション</p>
+        </div>
+      </a>
+
+      <a href="chapter04.html" class="chapter-card">
+        <span class="material-symbols-outlined chapter-icon">stream</span>
+        <div class="chapter-info">
+          <h2>第4章: ストリームAPI</h2>
+          <p>中間操作・終端操作、Collectors、Optional、ParallelStreamの使い方</p>
+        </div>
+      </a>
+
+      <a href="chapter05.html" class="chapter-card">
+        <span class="material-symbols-outlined chapter-icon">folder_open</span>
+        <div class="chapter-info">
+          <h2>第5章: 入出力 (NIO.2)</h2>
+          <p>Path/Paths/Files APIによるファイル操作、try-with-resources、ディレクトリ走査</p>
+        </div>
+      </a>
+
+      <a href="chapter06.html" class="chapter-card">
+        <span class="material-symbols-outlined chapter-icon">database</span>
+        <div class="chapter-info">
+          <h2>第6章: JDBCによるデータベース連携</h2>
+          <p>Connection、Statement、PreparedStatement、ResultSet、トランザクション管理</p>
+        </div>
+      </a>
+
+      <a href="chapter07.html" class="chapter-card">
+        <span class="material-symbols-outlined chapter-icon">data_object</span>
+        <div class="chapter-info">
+          <h2>第7章: ジェネリクスとコレクション</h2>
+          <p>List, Set, Map の比較とジェネリクスによる型安全性の確保</p>
+        </div>
+      </a>
+
+      <a href="chapter08.html" class="chapter-card">
+        <span class="material-symbols-outlined chapter-icon">label</span>
+        <div class="chapter-info">
+          <h2>第8章: アノテーション</h2>
+          <p>組み込みアノテーション、メタアノテーション（@Retention/@Target）、カスタムアノテーション定義、リフレクション</p>
+        </div>
+      </a>
+
+      <a href="chapter09.html" class="chapter-card">
+        <span class="material-symbols-outlined chapter-icon">error</span>
+        <div class="chapter-info">
+          <h2>第9章: 例外とアサーション</h2>
+          <p>検査例外・非検査例外の階層、マルチキャッチ、カスタム例外、assertの使い方</p>
+        </div>
+      </a>
+
+      <a href="chapter10.html" class="chapter-card">
+        <span class="material-symbols-outlined chapter-icon">language</span>
+        <div class="chapter-info">
+          <h2>第10章: ローカライズ</h2>
+          <p>Locale、NumberFormat、DateTimeFormatter、ResourceBundleによる国際化対応</p>
+        </div>
+      </a>
+
+      <a href="chapter11.html" class="chapter-card">
+        <span class="material-symbols-outlined chapter-icon">package_2</span>
+        <div class="chapter-info">
+          <h2>第11章: モジュール・システム</h2>
+          <p>module-info.java、requires/exports/opens、jdeps、ServiceLoader</p>
+        </div>
+      </a>
+
+      <a href="chapter12.html" class="chapter-card">
+        <span class="material-symbols-outlined chapter-icon">security</span>
+        <div class="chapter-info">
+          <h2>第12章: セキュアコーディング</h2>
+          <p>不変オブジェクト、防御的コピー、SQLインジェクション対策、機密情報の扱い、入力値の検証</p>
+        </div>
+      </a>
+    </div>
+  </main>
+</body>
+</html>

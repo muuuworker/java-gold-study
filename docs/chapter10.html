@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第10章 ローカライズ | Java Gold SE17</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Fira+Code&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+  <style>
+    :root { --md-sys-color-primary: #6750A4; --md-sys-color-primary-container: #EADDFF; --md-sys-color-secondary-container: #E8DEF8; --md-sys-color-on-secondary-container: #1D192B; --md-sys-color-surface: #FEF7FF; --md-sys-color-on-surface: #1C1B1F; --md-sys-color-surface-variant: #E7E0EC; --md-sys-color-on-surface-variant: #49454F; --md-sys-color-outline-variant: #CAC4D0; --md-sys-color-background: #FEF7FF; }
+    body { font-family: 'Roboto', sans-serif; background-color: var(--md-sys-color-background); color: var(--md-sys-color-on-surface); margin: 0; padding: 0; line-height: 1.6; }
+    .app-bar { display: flex; align-items: center; padding: 12px 24px; background-color: var(--md-sys-color-surface); position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--md-sys-color-outline-variant); }
+    .app-bar h1 { font-size: 20px; font-weight: 500; margin: 0; color: var(--md-sys-color-primary); flex-grow: 1; margin-left: 16px; }
+    .icon-button { background: none; border: none; cursor: pointer; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: background-color 0.2s; text-decoration: none; color: var(--md-sys-color-on-surface); }
+    .icon-button:hover { background-color: var(--md-sys-color-surface-variant); }
+    .drawer { position: fixed; top: 0; right: -280px; width: 280px; height: 100vh; background-color: var(--md-sys-color-surface); z-index: 20; transition: right 0.3s ease; padding: 24px 12px; overflow-y: auto; box-shadow: -2px 0 8px rgba(0,0,0,0.1); }
+    .drawer.open { right: 0; }
+    .drawer-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); z-index: 15; display: none; }
+    .drawer-overlay.open { display: block; }
+    .drawer h2 { font-size: 14px; font-weight: 500; color: var(--md-sys-color-on-surface-variant); margin: 0 0 12px 16px; text-transform: uppercase; }
+    .drawer a { display: block; padding: 16px; border-radius: 12px; color: var(--md-sys-color-on-surface); text-decoration: none; font-size: 14px; margin-bottom: 4px; transition: background-color 0.2s; }
+    .drawer a:hover { background-color: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
+    .main-content { max-width: 900px; margin: 32px auto; padding: 0 24px; }
+    .card { background-color: var(--md-sys-color-surface); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 16px; padding: 24px; margin-bottom: 32px; }
+    h2.section-title { color: var(--md-sys-color-primary); font-size: 22px; font-weight: 700; margin: 0 0 20px 0; border-bottom: 2px solid var(--md-sys-color-primary-container); padding-bottom: 8px; }
+    h3 { font-size: 18px; font-weight: 500; margin: 24px 0 12px 0; display: flex; align-items: center; gap: 8px; }
+    h3 .material-symbols-outlined { color: var(--md-sys-color-primary); font-size: 20px; }
+    p { color: var(--md-sys-color-on-surface-variant); margin-bottom: 16px; }
+    .code-group { border: 1px solid var(--md-sys-color-outline-variant); border-radius: 12px; overflow: hidden; background-color: #FAFAFA; margin-bottom: 20px; }
+    .code-block { margin: 0; padding: 16px; font-family: 'Fira Code', monospace; font-size: 13px; line-height: 1.7; overflow-x: auto; color: #333; }
+    .output-block { background-color: #F0FDF4; margin: 0; padding: 12px 16px; font-family: 'Fira Code', monospace; font-size: 13px; color: #166534; border-top: 1px solid #BBF7D0; }
+    .output-label { font-weight: 700; font-size: 12px; display: flex; align-items: center; gap: 6px; color: #15803D; text-transform: uppercase; margin-bottom: 4px; }
+    table { display: block; overflow-x: auto; border-collapse: collapse; margin: 16px 0 24px 0; font-size: 14px; }
+    th, td { border: 1px solid var(--md-sys-color-outline-variant); padding: 12px 16px; text-align: left; white-space: nowrap; }
+    th { background-color: var(--md-sys-color-surface-variant); color: var(--md-sys-color-on-surface-variant); font-weight: 500; }
+    code.inline { background-color: var(--md-sys-color-surface-variant); color: var(--md-sys-color-on-surface-variant); padding: 2px 6px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <header class="app-bar">
+    <a href="index.html" class="icon-button"><span class="material-symbols-outlined">home</span></a>
+    <h1>第10章 ローカライズ</h1>
+    <button class="icon-button" id="menuBtn"><span class="material-symbols-outlined">more_vert</span></button>
+  </header>
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+  <nav class="drawer" id="drawer">
+    <h2>目次</h2>
+    <a href="#locale" class="drawer-link">1. Locale</a>
+    <a href="#number-format" class="drawer-link">2. 数値・通貨フォーマット</a>
+    <a href="#date-format" class="drawer-link">3. 日付・時刻フォーマット</a>
+    <a href="#resource-bundle" class="drawer-link">4. ResourceBundle</a>
+  </nav>
+
+  <main class="main-content">
+
+    <section id="locale" class="card">
+      <h2 class="section-title">1. Locale</h2>
+      <h3><span class="material-symbols-outlined">table</span> Localeの生成方法</h3>
+      <table>
+        <tr><th>方法</th><th>例</th></tr>
+        <tr><td>定数フィールド</td><td><code class="inline">Locale.US</code>, <code class="inline">Locale.JAPAN</code>, <code class="inline">Locale.FRENCH</code></td></tr>
+        <tr><td>コンストラクタ（非推奨）</td><td><code class="inline">new Locale("ja", "JP")</code></td></tr>
+        <tr><td>Locale.Builder</td><td><code class="inline">new Locale.Builder().setLanguage("ja").setRegion("JP").build()</code></td></tr>
+        <tr><td>Locale.forLanguageTag</td><td><code class="inline">Locale.forLanguageTag("ja-JP")</code></td></tr>
+        <tr><td>システムデフォルト</td><td><code class="inline">Locale.getDefault()</code></td></tr>
+      </table>
+      <div class="code-group">
+        <pre class="code-block">Locale ja = Locale.JAPAN;
+Locale us = Locale.US;
+Locale fr = Locale.FRANCE;
+
+System.out.println("言語コード: " + ja.getLanguage()); // ja
+System.out.println("国コード:   " + ja.getCountry());  // JP
+System.out.println("表示名(ja): " + ja.getDisplayName(ja)); // 日本語 (日本)
+System.out.println("表示名(en): " + ja.getDisplayName(us)); // Japanese (Japan)</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          言語コード: ja<br>
+          国コード:   JP<br>
+          表示名(ja): 日本語 (日本)<br>
+          表示名(en): Japanese (Japan)
+        </div>
+      </div>
+    </section>
+
+    <section id="number-format" class="card">
+      <h2 class="section-title">2. 数値・通貨フォーマット</h2>
+      <h3><span class="material-symbols-outlined">table</span> NumberFormatの主なファクトリメソッド</h3>
+      <table>
+        <tr><th>メソッド</th><th>説明</th></tr>
+        <tr><td><code class="inline">NumberFormat.getInstance(locale)</code></td><td>汎用的な数値フォーマット</td></tr>
+        <tr><td><code class="inline">NumberFormat.getCurrencyInstance(locale)</code></td><td>通貨フォーマット（¥, $等のシンボル付き）</td></tr>
+        <tr><td><code class="inline">NumberFormat.getPercentInstance(locale)</code></td><td>パーセントフォーマット</td></tr>
+        <tr><td><code class="inline">NumberFormat.getIntegerInstance(locale)</code></td><td>整数フォーマット（小数点以下を丸める）</td></tr>
+      </table>
+      <div class="code-group">
+        <pre class="code-block">double price = 12345.678;
+
+// 通貨フォーマット
+NumberFormat usFormat = NumberFormat.getCurrencyInstance(Locale.US);
+NumberFormat jpFormat = NumberFormat.getCurrencyInstance(Locale.JAPAN);
+System.out.println("USD: " + usFormat.format(price));  // $12,345.68
+System.out.println("JPY: " + jpFormat.format(price));  // ¥12,346
+
+// 数値フォーマット (小数点以下の桁数制御)
+NumberFormat numFmt = NumberFormat.getInstance(Locale.US);
+numFmt.setMinimumFractionDigits(2); // 最低2桁
+numFmt.setMaximumFractionDigits(2); // 最高2桁
+System.out.println("数値: " + numFmt.format(price)); // 12,345.68
+
+// パーセント
+NumberFormat pctFmt = NumberFormat.getPercentInstance(Locale.US);
+System.out.println("パーセント: " + pctFmt.format(0.756)); // 76%
+
+// 文字列をパース
+Number parsed = usFormat.parse("$1,234.56");
+System.out.println("パース結果: " + parsed.doubleValue()); // 1234.56</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          USD: $12,345.68<br>
+          JPY: ¥12,346<br>
+          数値: 12,345.68<br>
+          パーセント: 76%<br>
+          パース結果: 1234.56
+        </div>
+      </div>
+    </section>
+
+    <section id="date-format" class="card">
+      <h2 class="section-title">3. 日付・時刻フォーマット（DateTimeFormatter）</h2>
+      <h3><span class="material-symbols-outlined">table</span> DateTimeFormatterの主なパターン記号</h3>
+      <table>
+        <tr><th>記号</th><th>意味</th><th>例</th></tr>
+        <tr><td><code class="inline">yyyy</code></td><td>年（4桁）</td><td>2024</td></tr>
+        <tr><td><code class="inline">MM</code></td><td>月（2桁、先頭ゼロ）</td><td>05</td></tr>
+        <tr><td><code class="inline">M</code></td><td>月（先頭ゼロなし）</td><td>5</td></tr>
+        <tr><td><code class="inline">dd</code></td><td>日（2桁）</td><td>07</td></tr>
+        <tr><td><code class="inline">HH</code></td><td>時（24時間形式）</td><td>14</td></tr>
+        <tr><td><code class="inline">hh</code></td><td>時（12時間形式）</td><td>02</td></tr>
+        <tr><td><code class="inline">mm</code></td><td>分</td><td>30</td></tr>
+        <tr><td><code class="inline">ss</code></td><td>秒</td><td>45</td></tr>
+        <tr><td><code class="inline">a</code></td><td>AM/PM</td><td>PM</td></tr>
+        <tr><td><code class="inline">E</code></td><td>曜日（短縮）</td><td>Mon</td></tr>
+        <tr><td><code class="inline">z</code></td><td>タイムゾーン名</td><td>JST</td></tr>
+      </table>
+      <div class="code-group">
+        <pre class="code-block">LocalDate date = LocalDate.of(2024, 5, 7);
+LocalTime time = LocalTime.of(14, 30, 45);
+LocalDateTime dateTime = LocalDateTime.of(date, time);
+
+// フォーマット（日時→文字列）
+DateTimeFormatter fmt1 = DateTimeFormatter.ofPattern("yyyy年MM月dd日");
+DateTimeFormatter fmt2 = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+DateTimeFormatter fmt3 = DateTimeFormatter.ofPattern("MM-dd-yyyy", Locale.US);
+
+System.out.println(date.format(fmt1));     // 2024年05月07日
+System.out.println(dateTime.format(fmt2)); // 2024/05/07 14:30:45
+System.out.println(date.format(fmt3));     // 05-07-2024
+
+// パース（文字列→日時オブジェクト）
+LocalDate parsed = LocalDate.parse("2024年05月07日", fmt1);
+System.out.println("パース: " + parsed); // 2024-05-07
+
+// 定義済みフォーマッタ
+System.out.println(dateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+// 2024-05-07T14:30:45</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          2024年05月07日<br>
+          2024/05/07 14:30:45<br>
+          05-07-2024<br>
+          パース: 2024-05-07<br>
+          2024-05-07T14:30:45
+        </div>
+      </div>
+    </section>
+
+    <section id="resource-bundle" class="card">
+      <h2 class="section-title">4. ResourceBundle（国際化対応テキスト）</h2>
+      <h3><span class="material-symbols-outlined">description</span> プロパティファイルの命名規則</h3>
+      <p>リソースバンドルは、<strong>ベース名 + アンダースコア + 言語コード + アンダースコア + 国コード + .properties</strong> という命名規則で配置します。</p>
+      <table>
+        <tr><th>ファイル名</th><th>対応Locale</th><th>優先順位</th></tr>
+        <tr><td><code class="inline">messages_ja_JP.properties</code></td><td>日本語（日本）</td><td>最高（最も具体的）</td></tr>
+        <tr><td><code class="inline">messages_ja.properties</code></td><td>日本語（共通）</td><td>↑</td></tr>
+        <tr><td><code class="inline">messages.properties</code></td><td>デフォルト（全言語共通）</td><td>最低（フォールバック）</td></tr>
+      </table>
+      <div class="code-group">
+        <pre class="code-block">// ファイル配置例 (src/main/resources/ または クラスパス直下)
+// messages.properties:
+//   greeting=Hello
+//   farewell=Goodbye
+//
+// messages_ja.properties:
+//   greeting=こんにちは
+//   farewell=さようなら
+
+// ResourceBundleの取得と使用
+Locale ja = Locale.JAPAN;
+ResourceBundle bundle = ResourceBundle.getBundle("messages", ja);
+// まず messages_ja_JP.properties を探し、なければ messages_ja.properties、
+// なければ messages.properties の順でフォールバック
+
+System.out.println(bundle.getString("greeting")); // こんにちは
+System.out.println(bundle.getString("farewell"));  // さようなら
+
+// キーが存在しない場合 → MissingResourceException（実行時例外）
+// bundle.getString("nonexistent"); // ← 例外スロー</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          こんにちは<br>
+          さようなら
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    const menuBtn = document.getElementById('menuBtn');
+    const drawer = document.getElementById('drawer');
+    const overlay = document.getElementById('drawerOverlay');
+    function toggleDrawer() { drawer.classList.toggle('open'); overlay.classList.toggle('open'); }
+    menuBtn.addEventListener('click', toggleDrawer);
+    overlay.addEventListener('click', toggleDrawer);
+    document.querySelectorAll('.drawer-link').forEach(l => l.addEventListener('click', () => { drawer.classList.remove('open'); overlay.classList.remove('open'); }));
+  </script>
+</body>
+</html>

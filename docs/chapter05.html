@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第5章 入出力 (NIO.2) | Java Gold SE17</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Fira+Code&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+  <style>
+    :root { --md-sys-color-primary: #6750A4; --md-sys-color-on-primary: #FFFFFF; --md-sys-color-primary-container: #EADDFF; --md-sys-color-secondary-container: #E8DEF8; --md-sys-color-on-secondary-container: #1D192B; --md-sys-color-surface: #FEF7FF; --md-sys-color-on-surface: #1C1B1F; --md-sys-color-surface-variant: #E7E0EC; --md-sys-color-on-surface-variant: #49454F; --md-sys-color-outline-variant: #CAC4D0; --md-sys-color-background: #FEF7FF; }
+    body { font-family: 'Roboto', sans-serif; background-color: var(--md-sys-color-background); color: var(--md-sys-color-on-surface); margin: 0; padding: 0; line-height: 1.6; }
+    .app-bar { display: flex; align-items: center; padding: 12px 24px; background-color: var(--md-sys-color-surface); position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--md-sys-color-outline-variant); }
+    .app-bar h1 { font-size: 20px; font-weight: 500; margin: 0; color: var(--md-sys-color-primary); flex-grow: 1; margin-left: 16px; }
+    .icon-button { background: none; border: none; cursor: pointer; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: background-color 0.2s; text-decoration: none; color: var(--md-sys-color-on-surface); }
+    .icon-button:hover { background-color: var(--md-sys-color-surface-variant); }
+    .drawer { position: fixed; top: 0; right: -280px; width: 280px; height: 100vh; background-color: var(--md-sys-color-surface); z-index: 20; transition: right 0.3s ease; padding: 24px 12px; overflow-y: auto; box-shadow: -2px 0 8px rgba(0,0,0,0.1); }
+    .drawer.open { right: 0; }
+    .drawer-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); z-index: 15; display: none; }
+    .drawer-overlay.open { display: block; }
+    .drawer h2 { font-size: 14px; font-weight: 500; color: var(--md-sys-color-on-surface-variant); margin: 0 0 12px 16px; text-transform: uppercase; }
+    .drawer a { display: block; padding: 16px; border-radius: 12px; color: var(--md-sys-color-on-surface); text-decoration: none; font-size: 14px; margin-bottom: 4px; transition: background-color 0.2s; }
+    .drawer a:hover { background-color: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
+    .main-content { max-width: 900px; margin: 32px auto; padding: 0 24px; }
+    .card { background-color: var(--md-sys-color-surface); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 16px; padding: 24px; margin-bottom: 32px; }
+    h2.section-title { color: var(--md-sys-color-primary); font-size: 22px; font-weight: 700; margin: 0 0 20px 0; border-bottom: 2px solid var(--md-sys-color-primary-container); padding-bottom: 8px; }
+    h3 { font-size: 18px; font-weight: 500; margin: 24px 0 12px 0; display: flex; align-items: center; gap: 8px; }
+    h3 .material-symbols-outlined { color: var(--md-sys-color-primary); font-size: 20px; }
+    p { color: var(--md-sys-color-on-surface-variant); margin-bottom: 16px; }
+    .code-group { border: 1px solid var(--md-sys-color-outline-variant); border-radius: 12px; overflow: hidden; background-color: #FAFAFA; margin-bottom: 20px; }
+    .code-block { margin: 0; padding: 16px; font-family: 'Fira Code', monospace; font-size: 13px; line-height: 1.7; overflow-x: auto; color: #333; }
+    .output-block { background-color: #F0FDF4; margin: 0; padding: 12px 16px; font-family: 'Fira Code', monospace; font-size: 13px; color: #166534; border-top: 1px solid #BBF7D0; }
+    .output-label { font-weight: 700; font-size: 12px; display: flex; align-items: center; gap: 6px; color: #15803D; text-transform: uppercase; margin-bottom: 4px; }
+    table { display: block; overflow-x: auto; border-collapse: collapse; margin: 16px 0 24px 0; font-size: 14px; }
+    th, td { border: 1px solid var(--md-sys-color-outline-variant); padding: 12px 16px; text-align: left; white-space: nowrap; }
+    th { background-color: var(--md-sys-color-surface-variant); color: var(--md-sys-color-on-surface-variant); font-weight: 500; }
+    .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 500; }
+    .badge.ok { background-color: #DCFCE7; color: #15803D; }
+    .badge.ng { background-color: #FEE2E2; color: #B91C1C; }
+    code.inline { background-color: var(--md-sys-color-surface-variant); color: var(--md-sys-color-on-surface-variant); padding: 2px 6px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <header class="app-bar">
+    <a href="index.html" class="icon-button"><span class="material-symbols-outlined">home</span></a>
+    <h1>第5章 入出力 (NIO.2)</h1>
+    <button class="icon-button" id="menuBtn"><span class="material-symbols-outlined">more_vert</span></button>
+  </header>
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+  <nav class="drawer" id="drawer">
+    <h2>目次</h2>
+    <a href="#path" class="drawer-link">1. Path と Paths</a>
+    <a href="#files" class="drawer-link">2. Filesクラス</a>
+    <a href="#stream" class="drawer-link">3. StreamによるファイルI/O</a>
+    <a href="#try-resources" class="drawer-link">4. try-with-resources</a>
+    <a href="#walk" class="drawer-link">5. ディレクトリ走査</a>
+  </nav>
+
+  <main class="main-content">
+
+    <section id="path" class="card">
+      <h2 class="section-title">1. Path と Paths</h2>
+      <h3><span class="material-symbols-outlined">table</span> 旧来のFileクラス vs NIO.2のPathの比較</h3>
+      <table>
+        <tr><th></th><th>java.io.File（旧来）</th><th>java.nio.file.Path（NIO.2）</th></tr>
+        <tr><td>生成方法</td><td><code class="inline">new File("path")</code></td><td><code class="inline">Paths.get("path")</code> または <code class="inline">Path.of("path")</code></td></tr>
+        <tr><td>エラー処理</td><td>多くのメソッドがbooleanを返す（例外なし）</td><td>失敗時に例外をスロー（より安全）</td></tr>
+        <tr><td>ファイル操作</td><td>Fileクラス自身</td><td>Filesクラスのstaticメソッドを使用</td></tr>
+        <tr><td>シンボリックリンク</td><td>非対応</td><td><span class="badge ok">対応</span></td></tr>
+      </table>
+      <div class="code-group">
+        <pre class="code-block">// Path.of() はJava11以降 (Paths.get()と等価)
+Path p1 = Path.of("dir", "file.txt");      // dir/file.txt
+Path p2 = Paths.get("/home/user/doc.txt");
+
+// 便利なPathメソッド
+System.out.println(p2.getFileName());  // doc.txt
+System.out.println(p2.getParent());    // /home/user
+System.out.println(p2.getRoot());      // /
+
+// resolve: パスの結合
+Path base = Path.of("/home/user");
+Path resolved = base.resolve("docs/readme.txt");
+System.out.println(resolved); // /home/user/docs/readme.txt
+
+// relativize: 相対パスを取得
+Path other = Path.of("/home/user/docs/readme.txt");
+System.out.println(base.relativize(other)); // docs/readme.txt</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          doc.txt<br>
+          /home/user<br>
+          /<br>
+          /home/user/docs/readme.txt<br>
+          docs/readme.txt
+        </div>
+      </div>
+    </section>
+
+    <section id="files" class="card">
+      <h2 class="section-title">2. Filesクラス（主要staticメソッド）</h2>
+      <h3><span class="material-symbols-outlined">table</span> 主なFilesメソッド一覧</h3>
+      <table>
+        <tr><th>メソッド</th><th>説明</th></tr>
+        <tr><td><code class="inline">Files.exists(path)</code></td><td>ファイル/ディレクトリが存在するか</td></tr>
+        <tr><td><code class="inline">Files.createFile(path)</code></td><td>新規ファイルを作成</td></tr>
+        <tr><td><code class="inline">Files.createDirectory(path)</code></td><td>新規ディレクトリを作成（中間ディレクトリは作れない）</td></tr>
+        <tr><td><code class="inline">Files.createDirectories(path)</code></td><td>中間ディレクトリも含めて全て作成</td></tr>
+        <tr><td><code class="inline">Files.copy(src, dest)</code></td><td>ファイルをコピー</td></tr>
+        <tr><td><code class="inline">Files.move(src, dest)</code></td><td>ファイルを移動/リネーム</td></tr>
+        <tr><td><code class="inline">Files.delete(path)</code></td><td>削除（存在しない場合は例外）</td></tr>
+        <tr><td><code class="inline">Files.deleteIfExists(path)</code></td><td>存在する場合のみ削除</td></tr>
+        <tr><td><code class="inline">Files.readString(path)</code></td><td>ファイル全体をStringで読む（Java11+）</td></tr>
+        <tr><td><code class="inline">Files.writeString(path, str)</code></td><td>Stringをファイルに書く（Java11+）</td></tr>
+        <tr><td><code class="inline">Files.readAllLines(path)</code></td><td>全行をList&lt;String&gt;で読む</td></tr>
+        <tr><td><code class="inline">Files.write(path, lines)</code></td><td>List&lt;String&gt;をファイルに書く</td></tr>
+        <tr><td><code class="inline">Files.isDirectory(path)</code></td><td>ディレクトリかどうか</td></tr>
+        <tr><td><code class="inline">Files.size(path)</code></td><td>ファイルサイズ（バイト）</td></tr>
+      </table>
+      <div class="code-group">
+        <pre class="code-block">Path file = Path.of("sample.txt");
+
+// 書き込み (StandardOpenOption.APPENDで追記も可能)
+Files.writeString(file, "Hello NIO.2!\nSecond Line\n");
+
+// 全体をStringで読む (Java 11+)
+String content = Files.readString(file);
+System.out.println("readString:\n" + content);
+
+// 行ごとに読む
+List&lt;String&gt; lines = Files.readAllLines(file);
+System.out.println("readAllLines: " + lines);
+
+// コピー (REPLACE_EXISTINGで上書き許可)
+Files.copy(file, Path.of("backup.txt"), StandardCopyOption.REPLACE_EXISTING);
+
+// 後片付け
+Files.deleteIfExists(file);
+Files.deleteIfExists(Path.of("backup.txt"));</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          readString:<br>
+          Hello NIO.2!<br>
+          Second Line<br>
+          <br>
+          readAllLines: [Hello NIO.2!, Second Line]
+        </div>
+      </div>
+    </section>
+
+    <section id="stream" class="card">
+      <h2 class="section-title">3. StreamによるファイルI/O</h2>
+      <p><code class="inline">Files.lines()</code> を使うと、ファイルの各行をストリームとして処理できます。大きなファイルでも全行をメモリに読み込まないため、効率的です。必ずtry-with-resourcesで閉じてください。</p>
+      <div class="code-group">
+        <pre class="code-block">Path logFile = Path.of("app.log");
+Files.writeString(logFile, "INFO: start\nERROR: failed\nINFO: end\n");
+
+// Files.lines(): 遅延評価でファイルを1行ずつStream処理
+try (Stream&lt;String&gt; stream = Files.lines(logFile)) {
+    long errorCount = stream
+        .filter(line -> line.startsWith("ERROR"))
+        .peek(line -> System.out.println("Found: " + line))
+        .count();
+    System.out.println("エラー件数: " + errorCount);
+}
+
+Files.deleteIfExists(logFile);</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          Found: ERROR: failed<br>
+          エラー件数: 1
+        </div>
+      </div>
+    </section>
+
+    <section id="try-resources" class="card">
+      <h2 class="section-title">4. try-with-resources</h2>
+      <h3><span class="material-symbols-outlined">table</span> AutoCloseableとCloseableの違い</h3>
+      <table>
+        <tr><th>インタフェース</th><th>メソッド</th><th>スローできる例外</th><th>主な用途</th></tr>
+        <tr><td><code class="inline">AutoCloseable</code></td><td><code class="inline">close() throws Exception</code></td><td>検査例外・非検査例外</td><td>try-with-resourcesの対象基底</td></tr>
+        <tr><td><code class="inline">Closeable</code></td><td><code class="inline">close() throws IOException</code></td><td>IOException</td><td>IOストリーム系クラス</td></tr>
+      </table>
+      <p><strong>⚠️ 試験対策：</strong> try-with-resourcesブロックは、finallyより先に<code class="inline">close()</code>が呼ばれます。また、複数リソースの<code class="inline">close()</code>は<strong>宣言の逆順</strong>で呼ばれます。</p>
+      <div class="code-group">
+        <pre class="code-block">// try-with-resources: ブロックを抜けると自動的にclose()される
+Path file = Path.of("resource_test.txt");
+Files.writeString(file, "test content");
+
+// BufferedReaderはCloseableを実装しているのでtry-with-resourcesで使える
+try (BufferedReader reader = Files.newBufferedReader(file)) {
+    String line;
+    while ((line = reader.readLine()) != null) {
+        System.out.println(line);
+    }
+} // ここでreader.close()が自動的に呼ばれる
+// catch, finallyは省略可能
+
+// 複数リソース: セミコロンで区切る。closeは宣言の逆順（res2→res1）
+try (var res1 = Files.newBufferedReader(file);
+     var res2 = Files.newBufferedWriter(Path.of("out.txt"))) {
+    res2.write(res1.readLine());
+}
+
+Files.deleteIfExists(file);
+Files.deleteIfExists(Path.of("out.txt"));</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          test content
+        </div>
+      </div>
+    </section>
+
+    <section id="walk" class="card">
+      <h2 class="section-title">5. ディレクトリ走査</h2>
+      <h3><span class="material-symbols-outlined">table</span> ディレクトリ走査メソッドの比較</h3>
+      <table>
+        <tr><th>メソッド</th><th>深さ</th><th>戻り値</th><th>説明</th></tr>
+        <tr><td><code class="inline">Files.list(path)</code></td><td>1階層のみ</td><td>Stream&lt;Path&gt;</td><td>直下の要素を列挙（再帰なし）</td></tr>
+        <tr><td><code class="inline">Files.walk(path)</code></td><td>全階層</td><td>Stream&lt;Path&gt;</td><td>再帰的に全要素を列挙</td></tr>
+        <tr><td><code class="inline">Files.find(path, depth, matcher)</code></td><td>指定深さ</td><td>Stream&lt;Path&gt;</td><td>条件付きで検索</td></tr>
+      </table>
+      <div class="code-group">
+        <pre class="code-block">// Files.walk: 指定ディレクトリ以下を再帰的に全列挙
+Path dir = Path.of("."); // カレントディレクトリ
+
+try (Stream&lt;Path&gt; paths = Files.walk(dir, 1)) { // depth=1: 直下のみ
+    paths.filter(Files::isRegularFile)            // ファイルのみ
+         .filter(p -> p.toString().endsWith(".java"))
+         .forEach(System.out::println);
+}
+
+// Files.find: 属性情報(BasicFileAttributes)を使った高度な検索
+try (Stream&lt;Path&gt; found = Files.find(dir, 2,
+        (p, attr) -> attr.isRegularFile() && attr.size() > 100)) {
+    found.forEach(System.out::println);
+}</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          ./Sample.java<br>
+          ./Main.java
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    const menuBtn = document.getElementById('menuBtn');
+    const drawer = document.getElementById('drawer');
+    const overlay = document.getElementById('drawerOverlay');
+    function toggleDrawer() { drawer.classList.toggle('open'); overlay.classList.toggle('open'); }
+    menuBtn.addEventListener('click', toggleDrawer);
+    overlay.addEventListener('click', toggleDrawer);
+    document.querySelectorAll('.drawer-link').forEach(l => l.addEventListener('click', () => { drawer.classList.remove('open'); overlay.classList.remove('open'); }));
+  </script>
+</body>
+</html>

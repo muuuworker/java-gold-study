@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第2章 関数型インタフェースとラムダ式 | Java Gold SE17</title>
+
+  <!-- Fonts & Icons for Material Design 3 -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Fira+Code&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+
+  <style>
+    /* Material Design 3 Light Theme Tokens */
+    :root {
+      --md-sys-color-primary: #6750A4;
+      --md-sys-color-on-primary: #FFFFFF;
+      --md-sys-color-primary-container: #EADDFF;
+      --md-sys-color-on-primary-container: #21005D;
+      --md-sys-color-secondary-container: #E8DEF8;
+      --md-sys-color-on-secondary-container: #1D192B;
+      --md-sys-color-surface: #FEF7FF;
+      --md-sys-color-on-surface: #1C1B1F;
+      --md-sys-color-surface-variant: #E7E0EC;
+      --md-sys-color-on-surface-variant: #49454F;
+      --md-sys-color-outline: #79747E;
+      --md-sys-color-outline-variant: #CAC4D0;
+      --md-sys-color-background: #FEF7FF;
+    }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: var(--md-sys-color-background);
+      color: var(--md-sys-color-on-surface);
+      margin: 0;
+      padding: 0;
+      line-height: 1.6;
+    }
+
+    /* Top App Bar */
+    .app-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 24px;
+      background-color: var(--md-sys-color-surface);
+      color: var(--md-sys-color-on-surface);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    }
+
+    .app-bar h1 {
+      font-size: 20px;
+      font-weight: 500;
+      margin: 0;
+      color: var(--md-sys-color-primary);
+    }
+
+    .icon-button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--md-sys-color-on-surface-variant);
+      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.2s;
+      text-decoration: none;
+    }
+
+    .icon-button:hover {
+      background-color: var(--md-sys-color-surface-variant);
+    }
+
+    /* Navigation Drawer (Right Side) */
+    .drawer {
+      position: fixed;
+      top: 0;
+      right: -320px;
+      width: 300px;
+      height: 100vh;
+      background-color: var(--md-sys-color-surface);
+      border-left: 1px solid var(--md-sys-color-outline-variant);
+      transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 20;
+      padding: 24px 12px;
+      overflow-y: auto;
+    }
+
+    .drawer.open {
+      right: 0;
+    }
+
+    .drawer-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.3);
+      z-index: 15;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .drawer-overlay.open {
+      display: block;
+      opacity: 1;
+    }
+
+    .drawer h2 {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--md-sys-color-on-surface-variant);
+      padding: 0 16px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .drawer a {
+      display: block;
+      padding: 16px;
+      color: var(--md-sys-color-on-surface);
+      text-decoration: none;
+      border-radius: 28px;
+      font-weight: 500;
+      margin-bottom: 4px;
+      transition: background-color 0.2s;
+    }
+
+    .drawer a:hover {
+      background-color: var(--md-sys-color-secondary-container);
+      color: var(--md-sys-color-on-secondary-container);
+    }
+
+    /* Main Content */
+    .main-content {
+      max-width: 900px;
+      margin: 32px auto;
+      padding: 0 24px;
+    }
+
+    .card {
+      background-color: var(--md-sys-color-surface);
+      border: 1px solid var(--md-sys-color-outline-variant);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 32px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    h2.section-title {
+      color: var(--md-sys-color-primary);
+      font-size: 22px;
+      margin-top: 0;
+      margin-bottom: 16px;
+      font-weight: 500;
+      border-bottom: 2px solid var(--md-sys-color-primary-container);
+      padding-bottom: 8px;
+    }
+
+    h3 {
+      font-size: 18px;
+      font-weight: 500;
+      margin-top: 32px;
+      margin-bottom: 12px;
+      color: var(--md-sys-color-on-surface);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h3 .material-symbols-outlined {
+      color: var(--md-sys-color-primary);
+      font-size: 20px;
+    }
+
+    p {
+      color: var(--md-sys-color-on-surface-variant);
+      margin-bottom: 16px;
+    }
+
+    /* Code and Output Grouping */
+    .code-group {
+      margin: 16px 0 32px 0;
+      border: 1px solid var(--md-sys-color-outline-variant);
+      border-radius: 8px;
+      overflow: hidden;
+      background-color: #FAFAFA;
+    }
+
+    .code-block {
+      margin: 0;
+      padding: 16px;
+      font-family: 'Fira Code', monospace;
+      font-size: 14px;
+      overflow-x: auto;
+      color: #333;
+    }
+
+    .output-block {
+      background-color: #F0FDF4;
+      /* Light Green */
+      margin: 0;
+      padding: 12px 16px;
+      font-family: 'Fira Code', monospace;
+      font-size: 14px;
+      color: #166534;
+      border-top: 1px solid #BBF7D0;
+    }
+
+    .output-label {
+      font-weight: 700;
+      font-size: 12px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #15803D;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Tables */
+    table {
+      display: block;
+      overflow-x: auto;
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px 0;
+      font-size: 14px;
+    }
+
+    th,
+    td {
+      border: 1px solid var(--md-sys-color-outline-variant);
+      padding: 12px 16px;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    th {
+      background-color: var(--md-sys-color-surface-variant);
+      color: var(--md-sys-color-on-surface-variant);
+      font-weight: 500;
+    }
+
+    /* Badges & Inline Code */
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .badge.ok {
+      background-color: #DCFCE7;
+      color: #15803D;
+    }
+
+    .badge.ng {
+      background-color: #FEE2E2;
+      color: #B91C1C;
+    }
+
+    .badge.warn {
+      background-color: #FEF9C3;
+      color: #A16207;
+    }
+
+    code.inline {
+      background-color: var(--md-sys-color-surface-variant);
+      color: var(--md-sys-color-on-surface-variant);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Fira Code', monospace;
+      font-size: 13px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Top App Bar -->
+  <header class="app-bar">
+    <a href="index.html" class="icon-button" aria-label="Back to Home">
+      <span class="material-symbols-outlined">home</span>
+    </a>
+    <h1 style="flex-grow: 1; margin-left: 16px;">第2章 関数型インタフェースとラムダ式</h1>
+    <button class="icon-button" id="menuBtn" aria-label="Open Table of Contents">
+      <span class="material-symbols-outlined">more_vert</span>
+    </button>
+  </header>
+
+  <!-- Right Navigation Drawer -->
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+  <nav class="drawer" id="drawer">
+    <h2>目次</h2>
+    <a href="#basic" class="drawer-link">1. 基本と4大インタフェース</a>
+    <a href="#lambda-rules" class="drawer-link">2. ラムダ式の構文ルール</a>
+    <a href="#method-ref" class="drawer-link">3. メソッド参照</a>
+    <a href="#variable-capture" class="drawer-link">4. 変数キャプチャ</a>
+    <a href="#primitive-func" class="drawer-link">5. プリミティブ特化</a>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main-content">
+
+    <section id="basic" class="card">
+      <h2 class="section-title">1. 基本定義と4大関数型インタフェース</h2>
+
+      <h3><span class="material-symbols-outlined">table</span> 4大基本関数型インタフェースとその派生</h3>
+      <table>
+        <tr>
+          <th>インターフェース</th>
+          <th>抽象メソッド</th>
+          <th>引数</th>
+          <th>戻り値</th>
+          <th>主な用途</th>
+        </tr>
+        <tr>
+          <td><code class="inline">Predicate&lt;T&gt;</code></td>
+          <td><code class="inline">boolean test(T t)</code></td>
+          <td>1</td>
+          <td><code class="inline">boolean</code></td>
+          <td>条件判定・フィルタリング</td>
+        </tr>
+        <tr>
+          <td><code class="inline">Consumer&lt;T&gt;</code></td>
+          <td><code class="inline">void accept(T t)</code></td>
+          <td>1</td>
+          <td>なし</td>
+          <td>出力処理、状態変更</td>
+        </tr>
+        <tr>
+          <td><code class="inline">Function&lt;T, R&gt;</code></td>
+          <td><code class="inline">R apply(T t)</code></td>
+          <td>1</td>
+          <td>任意の型</td>
+          <td>値の変換、データマッピング</td>
+        </tr>
+        <tr>
+          <td><code class="inline">Supplier&lt;T&gt;</code></td>
+          <td><code class="inline">T get()</code></td>
+          <td>なし</td>
+          <td>任意の型</td>
+          <td>インスタンス生成、遅延評価</td>
+        </tr>
+        <tr style="border-top: 2px solid var(--md-sys-color-outline);">
+          <td><code class="inline">UnaryOperator&lt;T&gt;</code></td>
+          <td><code class="inline">T apply(T t)</code></td>
+          <td>1</td>
+          <td>同型</td>
+          <td>引数と戻り値が同じ型の変換<br>（Functionの派生）</td>
+        </tr>
+        <tr>
+          <td><code class="inline">BinaryOperator&lt;T&gt;</code></td>
+          <td><code class="inline">T apply(T t1, T t2)</code></td>
+          <td>2</td>
+          <td>同型</td>
+          <td>2つの同型データから1つを算出<br>（BiFunctionの派生）</td>
+        </tr>
+        <tr>
+          <td><code class="inline">BiFunction&lt;T, U, R&gt;</code></td>
+          <td><code class="inline">R apply(T t, U u)</code></td>
+          <td>2</td>
+          <td>任意の型</td>
+          <td>2引数のデータマッピング</td>
+        </tr>
+      </table>
+
+      <h3><span class="material-symbols-outlined">code</span> 4大基本インタフェースと派生の使用例</h3>
+      <p>各インターフェースをラムダ式で実装した超シンプルな動作例です。</p>
+      <div class="code-group">
+        <pre class="code-block">import java.util.function.*;
+
+public class BasicInterfacesDemo {
+    public static void main(String[] args) {
+        // 1. Predicate (引数1つ → 判定してbooleanを返す)
+        Predicate&lt;String&gt; isEmpty = s -&gt; s.isEmpty();
+        System.out.println("Predicate: " + isEmpty.test("")); // true
+
+        // 2. Consumer (引数1つ → 処理するが戻り値はなし)
+        Consumer&lt;String&gt; printer = s -&gt; System.out.println("Consumer: " + s);
+        printer.accept("Hello"); // Consumer: Hello
+
+        // 3. Function (引数1つ → 別の型に変換して返す)
+        Function&lt;String, Integer&gt; length = s -&gt; s.length();
+        System.out.println("Function: " + length.apply("Java")); // 4
+
+        // 4. Supplier (引数なし → 生成・評価して任意の値を返す)
+        Supplier&lt;Double&gt; random = () -&gt; Math.random();
+        System.out.println("Supplier: " + random.get()); // 例: 0.846...
+
+        // 5. UnaryOperator (引数1つ、戻り値がすべて同じ型)
+        UnaryOperator&lt;String&gt; upper = s -&gt; s.toUpperCase();
+        System.out.println("UnaryOperator: " + upper.apply("gold")); // GOLD
+
+        // 6. BinaryOperator (引数2つ、戻り値がすべて同じ型)
+        BinaryOperator&lt;Integer&gt; add = (a, b) -&gt; a + b;
+        System.out.println("BinaryOperator: " + add.apply(10, 20)); // 30
+
+        // 7. BiFunction (引数2つ → 別の型に変換して返す)
+        BiFunction&lt;String, Integer, String&gt; repeat = (s, n) -&gt; s.repeat(n);
+        System.out.println("BiFunction: " + repeat.apply("A", 3)); // AAA
+    }
+}</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          Predicate: true<br>
+          Consumer: Hello<br>
+          Function: 4<br>
+          Supplier: 0.8465492471923143<br>
+          UnaryOperator: GOLD<br>
+          BinaryOperator: 30<br>
+          BiFunction: AAA
+        </div>
+      </div>
+
+      <h3><span class="material-symbols-outlined">description</span> 関数型インタフェースの定義ルール</h3>
+      <p>
+        関数型インタフェース（SAM: Single Abstract Method）とは、<strong>抽象メソッドをただ1つだけ持つインターフェース</strong>のことです。<br>
+        <code class="inline">default</code> メソッドや <code class="inline">static</code> メソッド、また <code
+          class="inline">Object</code> クラスに定義されているパブリックメソッド（<code class="inline">toString()</code> や <code
+          class="inline">equals()</code> など）のオーバーライド宣言は、抽象メソッドの数にカウントされません。<br>
+        アノテーション <code class="inline">@FunctionalInterface</code>
+        を付与すると、ルールを満たしていない場合にコンパイルエラーになるため、付与することが推奨されます（試験ではアノテーションがなくてもSAMを満たしていればラムダ式に代入可能です）。
+      </p>
+
+      <div class="code-group">
+        <pre class="code-block">@FunctionalInterface
+interface CustomChecker {
+    boolean check(String value); // 抽象メソッド1つのみ
+    
+    default void printHello() { System.out.println("Hello"); } // defaultはカウント外
+    static void printStatic() { System.out.println("Static"); } // staticもカウント外
+}
+
+public class Main {
+    public static void main(String[] args) {
+        // ラムダ式での実装
+        CustomChecker checker = (s) -> s != null && s.length() > 5;
+        System.out.println("Checker Result: " + checker.check("JavaGold"));
+    }
+}</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span>
+            Output</span>
+          Checker Result: true
+        </div>
+      </div>
+    </section>
+
+    <section id="lambda-rules" class="card">
+      <h2 class="section-title">2. ラムダ式の詳細な構文ルール</h2>
+
+      <h3><span class="material-symbols-outlined">table</span> 記述パターンの比較（省略ルール）</h3>
+      <table>
+        <tr>
+          <th>記述対象</th>
+          <th>記述ルール</th>
+          <th>例</th>
+          <th>可否</th>
+        </tr>
+        <tr>
+          <td>引数の括弧 <code class="inline">()</code></td>
+          <td>引数が1つで<strong>型を省略する</strong>場合のみ省略可能。<br>型を書く場合や引数0、2つ以上の場合は省略不可。</td>
+          <td><code class="inline">s -&gt; s.isEmpty()</code><br><code
+              class="inline">(String s) -&gt; s.isEmpty()</code></td>
+          <td><span class="badge ok">可</span><br><span class="badge ok">可（省略不可）</span></td>
+        </tr>
+        <tr>
+          <td>処理ブロックの波括弧 <code class="inline">{}</code></td>
+          <td>処理が1文の場合のみ省略可能。<br>省略した場合は末尾のセミコロン <code class="inline">;</code> と <code class="inline">return</code>
+            も自動で省略。
+          </td>
+          <td><code class="inline">s -&gt; s.length()</code><br><code
+              class="inline">s -&gt; { return s.length(); }</code></td>
+          <td><span class="badge ok">可</span><br><span class="badge ok">可</span></td>
+        </tr>
+        <tr>
+          <td>波括弧 <code class="inline">{}</code> のエラーパターン</td>
+          <td>波括弧 <code class="inline">{}</code> を書いたのに <code class="inline">return</code> を省略したり、<br>波括弧を省略したのに <code
+              class="inline">return</code> を書くとエラー。</td>
+          <td><code class="inline">s -&gt; { s.length(); }</code><br><code
+              class="inline">s -&gt; return s.length()</code></td>
+          <td><span class="badge ng">NG（コンパイル不可）</span><br><span class="badge ng">NG（コンパイル不可）</span></td>
+        </tr>
+        <tr>
+          <td>ローカル変数型推論 <code class="inline">var</code></td>
+          <td>Java 11以降、ラムダ式の引数に <code class="inline">var</code> を使用可能。<br>ただし一部だけに <code class="inline">var</code>
+            を使う、または型宣言と混ぜることは不可。</td>
+          <td><code class="inline">(var a, var b) -&gt; a + b</code><br><code
+              class="inline">(var a, b) -&gt; a + b</code></td>
+          <td><span class="badge ok">可</span><br><span class="badge ng">NG（一貫性が必要）</span></td>
+        </tr>
+      </table>
+
+      <h3><span class="material-symbols-outlined">description</span> 記述ルールと型推論の一貫性</h3>
+      <p>
+        ラムダ式を書く際、引数の省略や型推論には一貫性が求められます。<br>
+        例えば、引数が2つ以上ある場合に、片方だけに型を書いて片方を省略する（例: <code
+          class="inline">(String a, b) -&gt; ...</code>）ことはできません。すべて型を書くか、すべて省略するかのどちらかでなければなりません。<br>
+        また、アノテーションをラムダ式の引数に付けたい場合は、必ず <code class="inline">var</code> または明示的な型指定が必要になります（例: <code
+          class="inline">(@NotNull var s) -&gt; ...</code>）。
+      </p>
+
+      <div class="code-group">
+        <pre class="code-block">// 正しいラムダ式パターン
+BiFunction&lt;Integer, Integer, Integer&gt; calc1 = (var x, var y) -&gt; x + y; // varの正しい使用
+Function&lt;String, Integer&gt; len1 = (String s) -&gt; { return s.length(); }; // 完全な記述
+Function&lt;String, Integer&gt; len2 = s -&gt; s.length(); // 最大限の省略記述
+
+System.out.println("calc1: " + calc1.apply(10, 20));
+System.out.println("len2: " + len2.apply("Lambda"));</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span>
+            Output</span>
+          calc1: 30<br>
+          len2: 6
+        </div>
+      </div>
+    </section>
+
+    <section id="method-ref" class="card">
+      <h2 class="section-title">3. メソッド参照 (Method References)</h2>
+
+      <h3><span class="material-symbols-outlined">table</span> メソッド参照の4パターン比較</h3>
+      <table>
+        <tr>
+          <th>パターン</th>
+          <th>構文</th>
+          <th>ラムダ式での等価表現</th>
+          <th>具体例</th>
+        </tr>
+        <tr>
+          <td>静的メソッドの参照</td>
+          <td><code class="inline">ClassName::staticMethod</code></td>
+          <td><code class="inline">(args) -&gt; ClassName.staticMethod(args)</code></td>
+          <td><code class="inline">Integer::parseInt</code></td>
+        </tr>
+        <tr>
+          <td>特定オブジェクトの<br>インスタンスメソッド参照</td>
+          <td><code class="inline">instance::instanceMethod</code></td>
+          <td><code class="inline">(args) -&gt; instance.instanceMethod(args)</code></td>
+          <td><code class="inline">System.out::println</code></td>
+        </tr>
+        <tr>
+          <td>任意オブジェクトの<br>インスタンスメソッド参照</td>
+          <td><code class="inline">ClassName::instanceMethod</code></td>
+          <td><code class="inline">(obj, args) -&gt; obj.instanceMethod(args)</code></td>
+          <td><code class="inline">String::isEmpty</code></td>
+        </tr>
+        <tr>
+          <td>コンストラクタ参照</td>
+          <td><code class="inline">ClassName::new</code></td>
+          <td><code class="inline">(args) -&gt; new ClassName(args)</code></td>
+          <td><code class="inline">ArrayList::new</code></td>
+        </tr>
+      </table>
+
+      <h3><span class="material-symbols-outlined">description</span> 任意オブジェクトと特定オブジェクトの違い（最頻出）</h3>
+      <p>
+        メソッド参照 <code class="inline">::</code> を使うと、ラムダ式をさらに簡潔に記述できます。<br>
+        試験で最も引っかけられやすいのが、<strong>「特定オブジェクト」と「任意オブジェクト」のインスタンスメソッドの参照の違い</strong>です。<br>
+        例えば、<code class="inline">String::isEmpty</code>
+        は「任意のStringインスタンスに対してメソッドを実行する」という意味になるため、ラムダ式で表すと第1引数がレシーバ（呼び出し対象インスタンス）になり、<code
+          class="inline">(s) -&gt; s.isEmpty()</code> と等価になります。そのため、関数型インタフェースには「レシーバとなる引数」を1つ受け取る定義が必要です。
+      </p>
+
+      <div class="code-group">
+        <pre class="code-block">// 1. 静的メソッド参照 (Function<String, Integer> は引数を受け取り結果を返す)
+Function&lt;String, Integer&gt; parser = Integer::parseInt; 
+System.out.println("Static parse: " + (parser.apply("123") + 10));
+
+// 2. 任意オブジェクトのインスタンスメソッド参照
+// (引数の第1引数がメソッドを呼び出すインスタンス（String）になる)
+BiPredicate&lt;String, String&gt; checker = String::startsWith; 
+System.out.println("StartsWith: " + checker.test("JavaGold", "Java"));
+
+// 3. コンストラクタ参照
+Supplier&lt;StringBuilder&gt; sbCreator = StringBuilder::new;
+StringBuilder sb = sbCreator.get().append("Constructor Ref");
+System.out.println(sb.toString());</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span>
+            Output</span>
+          Static parse: 133<br>
+          StartsWith: true<br>
+          Constructor Ref
+        </div>
+      </div>
+    </section>
+
+    <section id="variable-capture" class="card">
+      <h2 class="section-title">4. 変数キャプチャと「効果的にfinal」</h2>
+
+      <h3><span class="material-symbols-outlined">table</span> ラムダ式内からの変数アクセスの可否</h3>
+      <table>
+        <tr>
+          <th>変数の種類</th>
+          <th>変更（再代入）可否</th>
+          <th>アクセス制限</th>
+          <th>備考</th>
+        </tr>
+        <tr>
+          <td>ローカル変数 / <br>メソッド引数</td>
+          <td><span class="badge ng">不可</span></td>
+          <td><code class="inline">final</code> <br>または <strong>効果的にfinal</strong></td>
+          <td>値を読み取ることはできるが、<br>ラムダの内外問わず再代入した時点でコンパイルエラーとなる。</td>
+        </tr>
+        <tr>
+          <td>インスタンス変数<br>（フィールド）</td>
+          <td><span class="badge ok">可</span></td>
+          <td>制限なし</td>
+          <td>インスタンス変数はヒープ領域に確保されるため、<br>変更・参照ともに自由に行えます。</td>
+        </tr>
+        <tr>
+          <td>クラス変数<br>（staticフィールド）</td>
+          <td><span class="badge ok">可</span></td>
+          <td>制限なし</td>
+          <td>static変数の場合も<br>変更・参照が自由に行えます。</td>
+        </tr>
+      </table>
+
+      <h3><span class="material-symbols-outlined">description</span> 「効果的にfinal (effectively final)」とは</h3>
+      <p>
+        ラムダ式内で外側のスコープの「ローカル変数」を参照することを **変数キャプチャ** と呼びます。<br>
+        このキャプチャ対象となるローカル変数は、明示的に <code class="inline">final</code>
+        と宣言されているか、あるいは**一度も値が変更されていない（効果的にfinal）**状態でなければなりません。<br>
+        メソッドの中でローカル変数に対して一度でも再代入が行われると、その変数は効果的にfinalとは見なされず、ラムダ式の中で参照した時点でコンパイルエラーが発生します。
+      </p>
+
+      <div class="code-group">
+        <pre class="code-block">public class CaptureDemo {
+    private int instanceVal = 100; // インスタンスフィールド
+
+    public void run() {
+        int localVal = 50; // finalがついていないが、一度も変更されていない（効果的にfinal）
+        int nonFinalVal = 10;
+        nonFinalVal = 20; // ここで再代入したため、効果的にfinalではなくなった！
+
+        Consumer&lt;String&gt; consumer = (msg) -&gt; {
+            System.out.println(msg + " Local: " + localVal); // ⭕️ 参照可能 (effectively final)
+            
+            // System.out.println(nonFinalVal); // ❌ コンパイルエラー！(effectively finalではない)
+            
+            instanceVal += 50; // ⭕️ インスタンス変数は変更可能！
+            System.out.println("Instance modified: " + instanceVal);
+        };
+        consumer.accept("Test");
+    }
+}
+
+// 実行確認
+new CaptureDemo().run();</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span>
+            Output</span>
+          Test Local: 50<br>
+          Instance modified: 150
+        </div>
+      </div>
+    </section>
+
+    <section id="primitive-func" class="card">
+      <h2 class="section-title">5. プリミティブ型に特化した関数型インタフェース</h2>
+
+      <h3><span class="material-symbols-outlined">table</span> プリミティブ特化型インタフェースの一覧</h3>
+      <p>ボクシング/アンボクシングのオーバーヘッド（無駄なオブジェクト生成）を避けるため、各プリミティブ型（<code class="inline">int</code>, <code
+          class="inline">long</code>, <code class="inline">double</code>）に特化したインターフェースが提供されています。</p>
+      <table>
+        <tr>
+          <th>基本型</th>
+          <th>型特化 Predicate</th>
+          <th>型特化 Consumer</th>
+          <th>型特化 Supplier</th>
+          <th>Function系（引数がプリミティブ）</th>
+          <th>Function系（戻り値がプリミティブ）</th>
+        </tr>
+        <tr>
+          <td><code class="inline">int</code></td>
+          <td><code class="inline">IntPredicate</code></td>
+          <td><code class="inline">IntConsumer</code></td>
+          <td><code class="inline">IntSupplier</code></td>
+          <td><code class="inline">IntFunction&lt;R&gt;</code></td>
+          <td><code class="inline">ToIntFunction&lt;T&gt;</code></td>
+        </tr>
+        <tr>
+          <td><code class="inline">long</code></td>
+          <td><code class="inline">LongPredicate</code></td>
+          <td><code class="inline">LongConsumer</code></td>
+          <td><code class="inline">LongSupplier</code></td>
+          <td><code class="inline">LongFunction&lt;R&gt;</code></td>
+          <td><code class="inline">ToLongFunction&lt;T&gt;</code></td>
+        </tr>
+        <tr>
+          <td><code class="inline">double</code></td>
+          <td><code class="inline">DoublePredicate</code></td>
+          <td><code class="inline">DoubleConsumer</code></td>
+          <td><code class="inline">DoubleSupplier</code></td>
+          <td><code class="inline">DoubleFunction&lt;R&gt;</code></td>
+          <td><code class="inline">ToDoubleFunction&lt;T&gt;</code></td>
+        </tr>
+      </table>
+
+      <h3><span class="material-symbols-outlined">description</span> プリミティブ特化型のメリットと命名規則</h3>
+      <p>
+        <code class="inline">Predicate&lt;Integer&gt;</code> を使って数値判定を行うと、要素を検証するたびに「基本データ型の <code
+          class="inline">int</code> をラッパークラスの <code class="inline">Integer</code> に包む」という暗黙のボクシングが発生します。<br>
+        これに対し、<code class="inline">IntPredicate</code> を使用すると内部的には <code class="inline">int</code>
+        のまま処理が流れるため、メモリや計算性能が最適化されます。<br>
+        <strong>試験対策のポイント：</strong>「引数がプリミティブで戻り値がオブジェクト」のパターン（例: <code
+          class="inline">IntFunction&lt;R&gt;</code>）と、「引数がオブジェクトで戻り値がプリミティブ」のパターン（例: <code
+          class="inline">ToIntFunction&lt;T&gt;</code>）の命名規則、およびそれぞれのメソッド名（<code class="inline">applyAsInt</code> などの
+        <code class="inline">As〇〇</code> がつくメソッド）を区別できるようにしてください。
+      </p>
+
+      <div class="code-group">
+        <pre class="code-block">// 1. 引数が int で、戻り値がString型
+IntFunction&lt;String&gt; intFunc = (i) -&gt; "Value is " + i;
+System.out.println("IntFunction: " + intFunc.apply(10)); // 通常通り apply
+
+// 2. 引数がStringで、戻り値が int型
+ToIntFunction&lt;String&gt; toIntFunc = (s) -&gt; s.length();
+System.out.println("ToIntFunction: " + toIntFunc.applyAsInt("JavaGold")); // メソッド名が applyAsInt になる！
+
+// 3. 2つの引数をプリミティブ double で受け取り計算
+DoubleBinaryOperator addDouble = (d1, d2) -&gt; d1 + d2;
+System.out.println("DoubleBinaryOperator: " + addDouble.applyAsDouble(1.5, 2.5)); // applyAsDouble</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span>
+            Output</span>
+          IntFunction: Value is 10<br>
+          ToIntFunction: 8<br>
+          DoubleBinaryOperator: 4.0
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    const menuBtn = document.getElementById('menuBtn');
+    const drawer = document.getElementById('drawer');
+    const overlay = document.getElementById('drawerOverlay');
+    const drawerLinks = document.querySelectorAll('.drawer-link');
+
+    function toggleDrawer() {
+      drawer.classList.toggle('open');
+      overlay.classList.toggle('open');
+    }
+
+    menuBtn.addEventListener('click', toggleDrawer);
+    overlay.addEventListener('click', toggleDrawer);
+
+    // リンククリック時にドロワーを閉じる
+    drawerLinks.forEach(link => {
+      link.addEventListener('click', () => {
+        if (drawer.classList.contains('open')) {
+          toggleDrawer();
+        }
+      });
+    });
+  </script>
+</body>
+
+</html>

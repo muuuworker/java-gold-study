@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第3章 並列処理 | Java Gold SE17</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Fira+Code&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+  <style>
+    :root {
+      --md-sys-color-primary: #6750A4;
+      --md-sys-color-on-primary: #FFFFFF;
+      --md-sys-color-primary-container: #EADDFF;
+      --md-sys-color-on-primary-container: #21005D;
+      --md-sys-color-secondary-container: #E8DEF8;
+      --md-sys-color-on-secondary-container: #1D192B;
+      --md-sys-color-surface: #FEF7FF;
+      --md-sys-color-on-surface: #1C1B1F;
+      --md-sys-color-surface-variant: #E7E0EC;
+      --md-sys-color-on-surface-variant: #49454F;
+      --md-sys-color-outline: #79747E;
+      --md-sys-color-outline-variant: #CAC4D0;
+      --md-sys-color-background: #FEF7FF;
+    }
+    body { font-family: 'Roboto', sans-serif; background-color: var(--md-sys-color-background); color: var(--md-sys-color-on-surface); margin: 0; padding: 0; line-height: 1.6; }
+    .app-bar { display: flex; align-items: center; justify-content: space-between; padding: 12px 24px; background-color: var(--md-sys-color-surface); position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--md-sys-color-outline-variant); }
+    .app-bar h1 { font-size: 20px; font-weight: 500; margin: 0; color: var(--md-sys-color-primary); }
+    .icon-button { background: none; border: none; cursor: pointer; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: background-color 0.2s; text-decoration: none; color: var(--md-sys-color-on-surface); }
+    .icon-button:hover { background-color: var(--md-sys-color-surface-variant); }
+    .drawer { position: fixed; top: 0; right: -280px; width: 280px; height: 100vh; background-color: var(--md-sys-color-surface); z-index: 20; transition: right 0.3s ease; padding: 24px 12px; overflow-y: auto; box-shadow: -2px 0 8px rgba(0,0,0,0.1); }
+    .drawer.open { right: 0; }
+    .drawer-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); z-index: 15; display: none; opacity: 0; transition: opacity 0.3s; }
+    .drawer-overlay.open { display: block; opacity: 1; }
+    .drawer h2 { font-size: 14px; font-weight: 500; color: var(--md-sys-color-on-surface-variant); margin: 0 0 12px 16px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .drawer a { display: block; padding: 16px; border-radius: 12px; color: var(--md-sys-color-on-surface); text-decoration: none; font-size: 14px; margin-bottom: 4px; transition: background-color 0.2s; }
+    .drawer a:hover { background-color: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
+    .main-content { max-width: 900px; margin: 32px auto; padding: 0 24px; }
+    .card { background-color: var(--md-sys-color-surface); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 16px; padding: 24px; margin-bottom: 32px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+    h2.section-title { color: var(--md-sys-color-primary); font-size: 22px; font-weight: 700; margin: 0 0 20px 0; border-bottom: 2px solid var(--md-sys-color-primary-container); padding-bottom: 8px; }
+    h3 { font-size: 18px; font-weight: 500; color: var(--md-sys-color-on-surface); margin: 24px 0 12px 0; display: flex; align-items: center; gap: 8px; }
+    h3 .material-symbols-outlined { color: var(--md-sys-color-primary); font-size: 20px; }
+    p { color: var(--md-sys-color-on-surface-variant); margin-bottom: 16px; }
+    .code-group { border: 1px solid var(--md-sys-color-outline-variant); border-radius: 12px; overflow: hidden; background-color: #FAFAFA; margin-bottom: 20px; }
+    .code-block { margin: 0; padding: 16px; font-family: 'Fira Code', monospace; font-size: 13px; line-height: 1.7; overflow-x: auto; color: #333; }
+    .output-block { background-color: #F0FDF4; margin: 0; padding: 12px 16px; font-family: 'Fira Code', monospace; font-size: 13px; line-height: 1.7; color: #166534; border-top: 1px solid #BBF7D0; }
+    .output-label { font-weight: 700; font-size: 12px; display: flex; align-items: center; gap: 6px; color: #15803D; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+    table { display: block; overflow-x: auto; width: 100%; border-collapse: collapse; margin: 16px 0 24px 0; font-size: 14px; }
+    th, td { border: 1px solid var(--md-sys-color-outline-variant); padding: 12px 16px; text-align: left; white-space: nowrap; }
+    th { background-color: var(--md-sys-color-surface-variant); color: var(--md-sys-color-on-surface-variant); font-weight: 500; }
+    .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 500; }
+    .badge.ok { background-color: #DCFCE7; color: #15803D; }
+    .badge.ng { background-color: #FEE2E2; color: #B91C1C; }
+    .badge.warn { background-color: #FEF9C3; color: #A16207; }
+    code.inline { background-color: var(--md-sys-color-surface-variant); color: var(--md-sys-color-on-surface-variant); padding: 2px 6px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 13px; }
+  </style>
+</head>
+
+<body>
+
+  <header class="app-bar">
+    <a href="index.html" class="icon-button" aria-label="Back to Home">
+      <span class="material-symbols-outlined">home</span>
+    </a>
+    <h1 style="flex-grow: 1; margin-left: 16px;">第3章 並列処理</h1>
+    <button class="icon-button" id="menuBtn" aria-label="Open Table of Contents">
+      <span class="material-symbols-outlined">more_vert</span>
+    </button>
+  </header>
+
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+  <nav class="drawer" id="drawer">
+    <h2>目次</h2>
+    <a href="#thread-basics" class="drawer-link">1. スレッドの基礎</a>
+    <a href="#executor" class="drawer-link">2. ExecutorService</a>
+    <a href="#callable-future" class="drawer-link">3. Callable と Future</a>
+    <a href="#sync" class="drawer-link">4. 同期制御</a>
+    <a href="#concurrent-collections" class="drawer-link">5. スレッドセーフなコレクション</a>
+    <a href="#atomic" class="drawer-link">6. Atomicクラス</a>
+  </nav>
+
+  <main class="main-content">
+
+    <section id="thread-basics" class="card">
+      <h2 class="section-title">1. スレッドの基礎</h2>
+      <h3><span class="material-symbols-outlined">table</span> スレッド生成方法の比較</h3>
+      <table>
+        <tr><th>方法</th><th>構文</th><th>特徴</th></tr>
+        <tr><td>Threadクラスを継承</td><td><code class="inline">class MyThread extends Thread</code></td><td>シンプルだが他クラスを継承できない</td></tr>
+        <tr><td>Runnableを実装</td><td><code class="inline">class MyTask implements Runnable</code></td><td>推奨。他クラスも継承できる</td></tr>
+        <tr><td>ラムダ式</td><td><code class="inline">new Thread(() -&gt; { ... })</code></td><td>最も簡潔。Java 8以降推奨</td></tr>
+      </table>
+      <h3><span class="material-symbols-outlined">description</span> スレッドの状態遷移</h3>
+      <p>Javaのスレッドは <code class="inline">Thread.State</code> 列挙型で定義された以下の状態を遷移します。</p>
+      <table>
+        <tr><th>状態</th><th>説明</th></tr>
+        <tr><td><code class="inline">NEW</code></td><td>newで生成されたが、まだstart()を呼んでいない</td></tr>
+        <tr><td><code class="inline">RUNNABLE</code></td><td>実行中 または 実行待ちでCPUのスケジューリングを待っている</td></tr>
+        <tr><td><code class="inline">BLOCKED</code></td><td>synchronizedブロックのロック取得待ち</td></tr>
+        <tr><td><code class="inline">WAITING</code></td><td>wait()やjoin()など、無期限に待機中</td></tr>
+        <tr><td><code class="inline">TIMED_WAITING</code></td><td>sleep(n)など、指定時間だけ待機中</td></tr>
+        <tr><td><code class="inline">TERMINATED</code></td><td>処理が完了し、終了した状態</td></tr>
+      </table>
+      <div class="code-group">
+        <pre class="code-block">// Runnableをラムダで実装してスレッド起動
+Thread t1 = new Thread(() -> System.out.println("Thread running: " + Thread.currentThread().getName()));
+t1.start(); // start() を呼ぶことで別スレッドが開始される（run()を直接呼ぶのはNG）
+
+// join() : t1の完了を待ってから次の処理へ
+t1.join();
+System.out.println("Main thread continues after t1 finishes.");</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          Thread running: Thread-0<br>
+          Main thread continues after t1 finishes.
+        </div>
+      </div>
+    </section>
+
+    <section id="executor" class="card">
+      <h2 class="section-title">2. ExecutorService</h2>
+      <h3><span class="material-symbols-outlined">table</span> Executorsファクトリメソッドの比較</h3>
+      <table>
+        <tr><th>メソッド</th><th>スレッドプール構成</th><th>主な用途</th></tr>
+        <tr><td><code class="inline">newFixedThreadPool(n)</code></td><td>固定n本のスレッド</td><td>負荷を一定に抑えたい場合</td></tr>
+        <tr><td><code class="inline">newCachedThreadPool()</code></td><td>必要に応じて生成・再利用</td><td>短命な大量タスク</td></tr>
+        <tr><td><code class="inline">newSingleThreadExecutor()</code></td><td>スレッド1本のみ</td><td>直列実行を保証したい場合</td></tr>
+        <tr><td><code class="inline">newScheduledThreadPool(n)</code></td><td>スケジューリング対応</td><td>定期実行・遅延実行</td></tr>
+      </table>
+      <h3><span class="material-symbols-outlined">description</span> ExecutorServiceの基本的な使い方</h3>
+      <p>スレッドを直接生成・管理する代わりに、<code class="inline">ExecutorService</code> にタスクを提出し、スレッドプールで効率よく処理します。<strong>必ず shutdown() を呼ぶこと</strong>が重要です。</p>
+      <div class="code-group">
+        <pre class="code-block">ExecutorService executor = Executors.newFixedThreadPool(2);
+
+// Runnableタスクの提出（戻り値なし）
+executor.submit(() -> System.out.println("Task A by " + Thread.currentThread().getName()));
+executor.submit(() -> System.out.println("Task B by " + Thread.currentThread().getName()));
+
+// 使い終わったら必ずshutdown()を呼ぶ
+executor.shutdown(); // 新しいタスクの受付を停止し、既存タスクの完了を待つ
+// executor.shutdownNow(); // 実行中タスクを割り込みで強制停止</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          Task A by pool-1-thread-1<br>
+          Task B by pool-1-thread-2
+        </div>
+      </div>
+    </section>
+
+    <section id="callable-future" class="card">
+      <h2 class="section-title">3. Callable と Future</h2>
+      <h3><span class="material-symbols-outlined">table</span> Runnable vs Callable の比較</h3>
+      <table>
+        <tr><th></th><th>Runnable</th><th>Callable&lt;V&gt;</th></tr>
+        <tr><td>抽象メソッド</td><td><code class="inline">void run()</code></td><td><code class="inline">V call() throws Exception</code></td></tr>
+        <tr><td>戻り値</td><td>なし</td><td>任意の型 V</td></tr>
+        <tr><td>例外</td><td>検査例外をスローできない</td><td>検査例外をスローできる</td></tr>
+        <tr><td>Futureの取得</td><td><span class="badge warn">submit()のみ可</span></td><td><span class="badge ok">submit()で取得可</span></td></tr>
+      </table>
+      <h3><span class="material-symbols-outlined">description</span> Futureで非同期処理の結果を取得</h3>
+      <p><code class="inline">Future&lt;V&gt;</code> は非同期タスクの「将来の結果」を表すオブジェクトです。<code class="inline">get()</code> を呼ぶと結果が返るまでブロックします。</p>
+      <div class="code-group">
+        <pre class="code-block">ExecutorService executor = Executors.newFixedThreadPool(1);
+
+// Callable: 戻り値あり、例外スローが可能
+Callable&lt;String&gt; task = () -> {
+    Thread.sleep(100);
+    return "計算結果: " + (10 + 20);
+};
+
+Future&lt;String&gt; future = executor.submit(task);
+
+// future.isDone() : タスクが完了したか確認（ノンブロッキング）
+System.out.println("完了済み?: " + future.isDone());
+
+// future.get() : 結果が出るまでブロック
+try {
+    String result = future.get(); // タイムアウト付き: future.get(1, TimeUnit.SECONDS)
+    System.out.println(result);
+} catch (InterruptedException | ExecutionException e) {
+    e.printStackTrace();
+} finally {
+    executor.shutdown();
+}</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          完了済み?: false<br>
+          計算結果: 30
+        </div>
+      </div>
+    </section>
+
+    <section id="sync" class="card">
+      <h2 class="section-title">4. 同期制御</h2>
+      <h3><span class="material-symbols-outlined">table</span> 同期制御の手段比較</h3>
+      <table>
+        <tr><th>手段</th><th>特徴</th><th>主な用途</th></tr>
+        <tr><td><code class="inline">synchronized</code>メソッド</td><td>メソッド全体をロック。シンプル</td><td>インスタンスメソッドの排他制御</td></tr>
+        <tr><td><code class="inline">synchronized</code>ブロック</td><td>ロック範囲を最小限に絞れる</td><td>パフォーマンスを重視する場合</td></tr>
+        <tr><td><code class="inline">Lock</code>インタフェース</td><td>tryLock()など高機能。明示的にlock/unlock</td><td>複雑な排他制御</td></tr>
+        <tr><td><code class="inline">volatile</code></td><td>可視性のみ保証。複合操作は不可</td><td>フラグ変数など単純な共有</td></tr>
+      </table>
+      <h3><span class="material-symbols-outlined">description</span> synchronized によるスレッドセーフなカウンター</h3>
+      <p>複数スレッドが同じフィールドを同時に読み書きすると「競合状態（Race Condition）」が発生します。<code class="inline">synchronized</code> を使うと1スレッドのみがブロック内を実行できます。</p>
+      <div class="code-group">
+        <pre class="code-block">public class Counter {
+    private int count = 0;
+
+    // synchronizedメソッド: 同時に1スレッドしか実行できない
+    public synchronized void increment() {
+        count++;
+    }
+
+    // synchronizedブロック: ロック粒度を細かくできる
+    public void incrementBlock() {
+        synchronized (this) {
+            count++;
+        }
+    }
+
+    public synchronized int getCount() { return count; }
+}
+
+Counter counter = new Counter();
+ExecutorService exec = Executors.newFixedThreadPool(10);
+for (int i = 0; i &lt; 1000; i++) {
+    exec.submit(counter::increment);
+}
+exec.shutdown();
+exec.awaitTermination(5, TimeUnit.SECONDS);
+System.out.println("Count: " + counter.getCount()); // 必ず 1000</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          Count: 1000
+        </div>
+      </div>
+    </section>
+
+    <section id="concurrent-collections" class="card">
+      <h2 class="section-title">5. スレッドセーフなコレクション</h2>
+      <h3><span class="material-symbols-outlined">table</span> スレッドセーフなコレクションの比較</h3>
+      <table>
+        <tr><th>クラス</th><th>対応するコレクション</th><th>特徴</th></tr>
+        <tr><td><code class="inline">CopyOnWriteArrayList</code></td><td>ArrayList</td><td>書き込み時にコピー生成。読み取り多数の場合に有効</td></tr>
+        <tr><td><code class="inline">ConcurrentHashMap</code></td><td>HashMap</td><td>セグメントロックで高いスループット</td></tr>
+        <tr><td><code class="inline">ConcurrentLinkedQueue</code></td><td>Queue</td><td>ロックフリーで高パフォーマンス</td></tr>
+        <tr><td><code class="inline">BlockingQueue</code></td><td>Queue</td><td>put/take時にブロック。Producer-Consumerパターン向け</td></tr>
+        <tr><td><code class="inline">Collections.synchronizedList()</code></td><td>任意のList</td><td>全メソッドをsynchronizedでラップ。旧来の方法</td></tr>
+      </table>
+      <h3><span class="material-symbols-outlined">description</span> ConcurrentHashMapの使用例</h3>
+      <p>通常の <code class="inline">HashMap</code> はスレッドセーフではなく、並列処理で使うとデータ破損が起こります。<code class="inline">ConcurrentHashMap</code> を使うと安全に並列アクセスできます。</p>
+      <div class="code-group">
+        <pre class="code-block">ConcurrentMap&lt;String, Integer&gt; map = new ConcurrentHashMap&lt;&gt;();
+map.put("apple", 1);
+map.put("banana", 2);
+
+// computeIfAbsent: キーが存在しない場合のみ値を計算・追加
+map.computeIfAbsent("cherry", k -> k.length());
+
+// merge: キーが存在する場合は既存値と新値をマージ
+map.merge("apple", 10, Integer::sum); // apple: 1 + 10 = 11
+
+System.out.println(map); // {apple=11, banana=2, cherry=6}</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          {apple=11, banana=2, cherry=6}
+        </div>
+      </div>
+    </section>
+
+    <section id="atomic" class="card">
+      <h2 class="section-title">6. Atomicクラス</h2>
+      <h3><span class="material-symbols-outlined">table</span> 主なAtomicクラス一覧</h3>
+      <table>
+        <tr><th>クラス</th><th>対応する型</th><th>主なメソッド</th></tr>
+        <tr><td><code class="inline">AtomicInteger</code></td><td>int</td><td><code class="inline">getAndIncrement()</code>, <code class="inline">compareAndSet()</code></td></tr>
+        <tr><td><code class="inline">AtomicLong</code></td><td>long</td><td><code class="inline">incrementAndGet()</code>, <code class="inline">addAndGet()</code></td></tr>
+        <tr><td><code class="inline">AtomicBoolean</code></td><td>boolean</td><td><code class="inline">compareAndSet(expected, update)</code></td></tr>
+        <tr><td><code class="inline">AtomicReference&lt;V&gt;</code></td><td>任意のオブジェクト</td><td><code class="inline">compareAndSet()</code></td></tr>
+      </table>
+      <h3><span class="material-symbols-outlined">description</span> synchronized不要でスレッドセーフなカウンター</h3>
+      <p><code class="inline">AtomicInteger</code> などはCAS（Compare-And-Swap）というCPUの命令を使って、<code class="inline">synchronized</code> なしでスレッドセーフな操作を実現します。オーバーヘッドが少なく高速です。</p>
+      <div class="code-group">
+        <pre class="code-block">AtomicInteger atomicCount = new AtomicInteger(0);
+
+ExecutorService exec = Executors.newFixedThreadPool(10);
+for (int i = 0; i &lt; 1000; i++) {
+    exec.submit(atomicCount::incrementAndGet);
+}
+exec.shutdown();
+exec.awaitTermination(5, TimeUnit.SECONDS);
+
+System.out.println("AtomicInteger count: " + atomicCount.get()); // 必ず 1000
+
+// compareAndSet: 現在値がexpectedと等しい場合のみ更新（CAS操作）
+AtomicBoolean flag = new AtomicBoolean(false);
+boolean updated = flag.compareAndSet(false, true); // false→trueに変更
+System.out.println("Updated: " + updated + ", flag: " + flag.get());</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          AtomicInteger count: 1000<br>
+          Updated: true, flag: true
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    const menuBtn = document.getElementById('menuBtn');
+    const drawer = document.getElementById('drawer');
+    const overlay = document.getElementById('drawerOverlay');
+    const drawerLinks = document.querySelectorAll('.drawer-link');
+
+    function toggleDrawer() {
+      drawer.classList.toggle('open');
+      overlay.classList.toggle('open');
+    }
+
+    menuBtn.addEventListener('click', toggleDrawer);
+    overlay.addEventListener('click', toggleDrawer);
+
+    drawerLinks.forEach(link => {
+      link.addEventListener('click', () => {
+        drawer.classList.remove('open');
+        overlay.classList.remove('open');
+      });
+    });
+  </script>
+</body>
+
+</html>

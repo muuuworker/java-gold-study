@@ -85,19 +85,45 @@
         ③ <strong>元のデータを変更しない：</strong> 元のコレクション自体は変化しません。
       </p>
       <div class="code-group">
-        <pre class="code-block">// ストリームのパイプライン: 生成 → 中間操作（複数可） → 終端操作（1つ）
+        <pre class="code-block">// ① コレクションから: list.stream()
 List&lt;String&gt; names = Arrays.asList("Alice", "Bob", "Charlie", "Dave");
+names.stream().forEach(System.out::println); // Alice Bob Charlie Dave
 
-List&lt;String&gt; result = names.stream()        // 1. 生成
-    .filter(s -> s.length() > 3)             // 2. 中間操作（絞り込み）
-    .map(String::toUpperCase)                // 2. 中間操作（変換）
-    .sorted()                                // 2. 中間操作（ソート）
-    .collect(Collectors.toList());           // 3. 終端操作（収集）
+// ② 配列から: Arrays.stream()
+String[] arr = {"x", "y", "z"};
+Arrays.stream(arr).forEach(s -> System.out.print(s + " ")); // x y z
+System.out.println();
 
-System.out.println(result);</pre>
+// ③ Stream.of(): 値を直接列挙
+Stream.of("a", "b", "c").forEach(s -> System.out.print(s + " ")); // a b c
+System.out.println();
+
+// ④ IntStream.range(start, end): end は含まない
+IntStream.range(0, 5).forEach(n -> System.out.print(n + " ")); // 0 1 2 3 4
+System.out.println();
+
+// ④ IntStream.rangeClosed(start, end): end を含む
+IntStream.rangeClosed(1, 5).forEach(n -> System.out.print(n + " ")); // 1 2 3 4 5
+System.out.println();
+
+// ⑤ Stream.iterate(): 初期値から規則に従い無限生成 → limit()で件数を絞る
+Stream.iterate(0, n -> n + 2).limit(5)
+    .forEach(n -> System.out.print(n + " ")); // 0 2 4 6 8
+System.out.println();
+
+// ⑤ Stream.generate(): Supplierで無限生成
+Stream.generate(Math::random).limit(3)
+    .forEach(r -> System.out.printf("%.3f ", r)); // 例: 0.231 0.874 0.512
+System.out.println();</pre>
         <div class="output-block">
           <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
-          [ALICE, CHARLIE, DAVE]
+          Alice Bob Charlie Dave<br>
+          x y z<br>
+          a b c<br>
+          0 1 2 3 4<br>
+          1 2 3 4 5<br>
+          0 2 4 6 8<br>
+          0.231 0.874 0.512
         </div>
       </div>
     </section>
@@ -118,32 +144,69 @@ System.out.println(result);</pre>
         <tr><td><code class="inline">mapToInt(ToIntFunction)</code></td><td>ToIntFunction&lt;T&gt;</td><td>IntStreamに変換（sum/average等が使える）</td></tr>
       </table>
       <div class="code-group">
-        <pre class="code-block">// flatMap: Listのリストをフラットにする
-List&lt;List&lt;String&gt;&gt; nested = Arrays.asList(
-    Arrays.asList("a", "b"),
-    Arrays.asList("c", "d")
-);
-List&lt;String&gt; flat = nested.stream()
-    .flatMap(List::stream)
-    .collect(Collectors.toList());
-System.out.println("flatMap: " + flat);
+        <pre class="code-block">List&lt;Integer&gt; nums = Arrays.asList(3, 1, 4, 1, 5, 9, 2, 6, 5);
 
-// peek: デバッグ用途でストリームの途中を覗く
-List&lt;String&gt; words = Arrays.asList("hello", "world", "java");
-words.stream()
-    .peek(s -> System.out.println("before: " + s))
-    .map(String::toUpperCase)
-    .peek(s -> System.out.println("after:  " + s))
-    .forEach(s -> {}); // 終端操作を呼ぶまでpeekは動かない</pre>
+// filter: 条件を満たす要素のみ残す
+List&lt;Integer&gt; filtered = nums.stream().filter(n -> n &gt; 4).collect(Collectors.toList());
+System.out.println("filter:   " + filtered); // [5, 9, 6, 5]
+
+// map: 各要素を変換（Integer → String）
+List&lt;String&gt; mapped = nums.stream().map(n -> "#" + n).collect(Collectors.toList());
+System.out.println("map:      " + mapped); // [#3, #1, #4, ...]
+
+// sorted(): 自然順序でソート
+List&lt;Integer&gt; sorted = nums.stream().sorted().collect(Collectors.toList());
+System.out.println("sorted:   " + sorted); // [1, 1, 2, 3, 4, 5, 5, 6, 9]
+
+// sorted(Comparator): 降順ソート
+List&lt;Integer&gt; sortedDesc = nums.stream().sorted(Comparator.reverseOrder()).collect(Collectors.toList());
+System.out.println("sortedDesc: " + sortedDesc); // [9, 6, 5, 5, 4, 3, 2, 1, 1]
+
+// distinct: 重複を除去
+List&lt;Integer&gt; distinct = nums.stream().distinct().collect(Collectors.toList());
+System.out.println("distinct: " + distinct); // [3, 1, 4, 5, 9, 2, 6]
+
+// limit: 先頭n件だけ取得
+List&lt;Integer&gt; limited = nums.stream().limit(4).collect(Collectors.toList());
+System.out.println("limit(4): " + limited); // [3, 1, 4, 1]
+
+// skip: 先頭n件をスキップ
+List&lt;Integer&gt; skipped = nums.stream().skip(6).collect(Collectors.toList());
+System.out.println("skip(6):  " + skipped); // [2, 6, 5]
+
+// mapToInt: IntStreamに変換して sum/average/min/max を利用
+IntStream intStream = nums.stream().mapToInt(Integer::intValue);
+System.out.println("sum:      " + intStream.sum()); // 36
+nums.stream().mapToInt(Integer::intValue).average()
+    .ifPresent(avg -> System.out.printf("average:  %.2f%n", avg)); // 4.00
+
+// flatMap: ネストしたコレクションを平坦化
+List&lt;List&lt;String&gt;&gt; nested = Arrays.asList(Arrays.asList("a", "b"), Arrays.asList("c", "d"));
+List&lt;String&gt; flat = nested.stream().flatMap(List::stream).collect(Collectors.toList());
+System.out.println("flatMap:  " + flat); // [a, b, c, d]
+
+// peek: デバッグ用途でストリームの途中を覗く（要素は変化しない）
+nums.stream().limit(2)
+    .peek(n -> System.out.println("peek前: " + n))
+    .map(n -> n * 10)
+    .peek(n -> System.out.println("peek後: " + n))
+    .forEach(n -> {});</pre>
         <div class="output-block">
           <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
-          flatMap: [a, b, c, d]<br>
-          before: hello<br>
-          after:  HELLO<br>
-          before: world<br>
-          after:  WORLD<br>
-          before: java<br>
-          after:  JAVA
+          filter:   [5, 9, 6, 5]<br>
+          map:      [#3, #1, #4, #1, #5, #9, #2, #6, #5]<br>
+          sorted:   [1, 1, 2, 3, 4, 5, 5, 6, 9]<br>
+          sortedDesc: [9, 6, 5, 5, 4, 3, 2, 1, 1]<br>
+          distinct: [3, 1, 4, 5, 9, 2, 6]<br>
+          limit(4): [3, 1, 4, 1]<br>
+          skip(6):  [2, 6, 5]<br>
+          sum:      36<br>
+          average:  4.00<br>
+          flatMap:  [a, b, c, d]<br>
+          peek前: 3<br>
+          peek後: 30<br>
+          peek前: 1<br>
+          peek後: 10
         </div>
       </div>
     </section>
@@ -166,25 +229,63 @@ words.stream()
         <tr><td><code class="inline">toArray()</code></td><td>Object[]</td><td>配列に変換する</td></tr>
       </table>
       <div class="code-group">
-        <pre class="code-block">List&lt;Integer&gt; nums = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+        <pre class="code-block">List&lt;String&gt; words = Arrays.asList("apple", "banana", "cherry", "date", "elderberry");
+List&lt;Integer&gt; nums = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 
-System.out.println("count:    " + nums.stream().count());
-System.out.println("anyMatch: " + nums.stream().anyMatch(n -> n > 9));
-System.out.println("allMatch: " + nums.stream().allMatch(n -> n > 0));
-System.out.println("min:      " + nums.stream().min(Integer::compareTo).get());
-System.out.println("max:      " + nums.stream().max(Integer::compareTo).get());
+// collect: リストやMapに収集（詳細はCollectorsセクション参照）
+List&lt;String&gt; collected = words.stream().filter(s -> s.length() &gt; 4).collect(Collectors.toList());
+System.out.println("collect:    " + collected);
 
-// reduce: 初期値0から始めて全要素を足し合わせる
-int sum = nums.stream().reduce(0, (a, b) -> a + b);
-System.out.println("reduce sum: " + sum);</pre>
+// forEach: 各要素に処理を実行（戻り値なし・終端操作）
+System.out.print("forEach:    ");
+words.stream().limit(3).forEach(s -> System.out.print(s + " "));
+System.out.println();
+
+// count: 要素数
+System.out.println("count:      " + words.stream().filter(s -> s.contains("a")).count());
+
+// findFirst: 最初の要素（Optionalで返る）
+words.stream().filter(s -> s.startsWith("c"))
+    .findFirst()
+    .ifPresent(s -> System.out.println("findFirst:  " + s));
+
+// findAny: 任意の1要素（並列処理で効果的。直列では通常findFirstと同じ）
+words.stream().filter(s -> s.length() == 4)
+    .findAny()
+    .ifPresent(s -> System.out.println("findAny:    " + s));
+
+// anyMatch / allMatch / noneMatch
+System.out.println("anyMatch:   " + words.stream().anyMatch(s -> s.startsWith("z")));
+System.out.println("allMatch:   " + words.stream().allMatch(s -> s.length() &gt; 2));
+System.out.println("noneMatch:  " + words.stream().noneMatch(s -> s.isEmpty()));
+
+// min / max
+words.stream().min(Comparator.comparingInt(String::length))
+    .ifPresent(s -> System.out.println("min(長さ): " + s));
+words.stream().max(Comparator.comparingInt(String::length))
+    .ifPresent(s -> System.out.println("max(長さ): " + s));
+
+// reduce: 集約して1つの値にする
+int sum = nums.stream().reduce(0, Integer::sum);
+System.out.println("reduce sum: " + sum);
+
+// toArray: 配列に変換
+Object[] array = words.stream().filter(s -> s.length() &lt;= 5).toArray();
+System.out.println("toArray:    " + Arrays.toString(array));</pre>
         <div class="output-block">
           <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
-          count:    10<br>
-          anyMatch: true<br>
-          allMatch: true<br>
-          min:      1<br>
-          max:      10<br>
-          reduce sum: 55
+          collect:    [apple, banana, cherry, elderberry]<br>
+          forEach:    apple banana cherry<br>
+          count:      3<br>
+          findFirst:  cherry<br>
+          findAny:    date<br>
+          anyMatch:   false<br>
+          allMatch:   true<br>
+          noneMatch:  true<br>
+          min(長さ): date<br>
+          max(長さ): elderberry<br>
+          reduce sum: 55<br>
+          toArray:    [apple, date]
         </div>
       </div>
     </section>
@@ -205,25 +306,55 @@ System.out.println("reduce sum: " + sum);</pre>
       </table>
       <div class="code-group">
         <pre class="code-block">List&lt;String&gt; fruits = Arrays.asList("apple", "banana", "avocado", "cherry", "blueberry");
+List&lt;Integer&gt; scores = Arrays.asList(80, 95, 72, 95, 60, 88);
 
-// joining: 文字列結合
+// toList(): Listに収集
+List&lt;String&gt; aFruits = fruits.stream().filter(s -> s.startsWith("a")).collect(Collectors.toList());
+System.out.println("toList:         " + aFruits); // [apple, avocado]
+
+// toSet(): Setに収集（重複が除去される）
+Set&lt;Integer&gt; scoreSet = scores.stream().collect(Collectors.toSet());
+System.out.println("toSet:          " + scoreSet); // [80, 88, 72, 60, 95] (順不同)
+
+// toMap(keyMapper, valueMapper): Mapに収集
+Map&lt;String, Integer&gt; fruitLengthMap = fruits.stream()
+    .collect(Collectors.toMap(s -> s, String::length));
+System.out.println("toMap:          " + fruitLengthMap);
+
+// joining(delimiter, prefix, suffix): 文字列連結
 String joined = fruits.stream().collect(Collectors.joining(", ", "[", "]"));
-System.out.println("joining: " + joined);
+System.out.println("joining:        " + joined);
 
 // groupingBy: 頭文字でグループ化
 Map&lt;Character, List&lt;String&gt;&gt; grouped = fruits.stream()
     .collect(Collectors.groupingBy(s -> s.charAt(0)));
-System.out.println("groupingBy: " + grouped);
+System.out.println("groupingBy:     " + grouped);
 
-// partitioningBy: 6文字以上かで2分
+// groupingBy + counting: グループごとの件数
+Map&lt;Character, Long&gt; countByInitial = fruits.stream()
+    .collect(Collectors.groupingBy(s -> s.charAt(0), Collectors.counting()));
+System.out.println("counting:       " + countByInitial); // {a=2, b=2, c=1}
+
+// partitioningBy: 6文字以上かで true/false の2グループに分割
 Map&lt;Boolean, List&lt;String&gt;&gt; partitioned = fruits.stream()
-    .collect(Collectors.partitioningBy(s -> s.length() >= 6));
-System.out.println("partitioningBy: " + partitioned);</pre>
+    .collect(Collectors.partitioningBy(s -> s.length() &gt;= 6));
+System.out.println("partitioningBy: " + partitioned);
+
+// summarizingInt: count/sum/min/max/average をまとめて取得
+IntSummaryStatistics stats = scores.stream()
+    .collect(Collectors.summarizingInt(Integer::intValue));
+System.out.printf("summarizingInt: count=%d, sum=%d, min=%d, max=%d, avg=%.1f%n",
+    stats.getCount(), (long)stats.getSum(), stats.getMin(), stats.getMax(), stats.getAverage());</pre>
         <div class="output-block">
           <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
-          joining: [apple, banana, avocado, cherry, blueberry]<br>
-          groupingBy: {a=[apple, avocado], b=[banana, blueberry], c=[cherry]}<br>
-          partitioningBy: {false=[apple], true=[banana, avocado, cherry, blueberry]}
+          toList:         [apple, avocado]<br>
+          toSet:          [80, 88, 72, 60, 95]<br>
+          toMap:          {apple=5, banana=6, avocado=7, cherry=6, blueberry=9}<br>
+          joining:        [apple, banana, avocado, cherry, blueberry]<br>
+          groupingBy:     {a=[apple, avocado], b=[banana, blueberry], c=[cherry]}<br>
+          counting:       {a=2, b=2, c=1}<br>
+          partitioningBy: {false=[apple], true=[banana, avocado, cherry, blueberry]}<br>
+          summarizingInt: count=6, sum=490, min=60, max=95, avg=81.7
         </div>
       </div>
     </section>
@@ -243,29 +374,57 @@ System.out.println("partitioningBy: " + partitioned);</pre>
         <tr><td><code class="inline">map(Function)</code></td><td>変換後のOptionalを返す</td><td>空のOptionalを返す</td></tr>
       </table>
       <div class="code-group">
-        <pre class="code-block">// Optional.of(): nullを渡すとNullPointerException
-// Optional.ofNullable(): nullを渡すと空のOptionalになる
-Optional&lt;String&gt; opt1 = Optional.of("Hello");
-Optional&lt;String&gt; opt2 = Optional.ofNullable(null);
-Optional&lt;String&gt; opt3 = Optional.empty();
+        <pre class="code-block">// 生成方法
+Optional&lt;String&gt; opt1 = Optional.of("Hello");          // 値あり
+Optional&lt;String&gt; opt2 = Optional.ofNullable(null);      // nullなら空になる
+Optional&lt;String&gt; opt3 = Optional.empty();               // 常に空
 
-System.out.println(opt1.orElse("default"));     // Hello
-System.out.println(opt2.orElse("default"));     // default
-System.out.println(opt3.isPresent());           // false
+// get(): 値があれば取得。空なら NoSuchElementException（isPresent確認推奨）
+if (opt1.isPresent()) {
+    System.out.println("get:          " + opt1.get()); // Hello
+}
+System.out.println("isPresent:    " + opt2.isPresent()); // false
 
-// ifPresent: 値があれば実行
-opt1.ifPresent(s -> System.out.println("Value: " + s));
+// orElse: 空なら引数の値を返す（引数は常に評価される）
+System.out.println("orElse:       " + opt2.orElse("default"));
 
-// map + orElse: 変換チェーン
-String result = opt1.map(String::toUpperCase).orElse("empty");
-System.out.println("mapped: " + result);</pre>
+// orElseGet: 空なら Supplier を呼び出す（遅延評価 → orElseより効率的な場合も）
+System.out.println("orElseGet:    " + opt2.orElseGet(() -> "lazy-default"));
+
+// orElseThrow: 空なら指定した例外をスロー
+try {
+    opt3.orElseThrow(() -> new IllegalStateException("値がありません"));
+} catch (IllegalStateException e) {
+    System.out.println("orElseThrow:  " + e.getMessage());
+}
+
+// ifPresent: 値があれば Consumer を実行（空なら何もしない）
+opt1.ifPresent(s -> System.out.println("ifPresent:    " + s));
+opt2.ifPresent(s -> System.out.println("この行は実行されない"));
+
+// filter: 条件を満たさない場合は空のOptionalに変換
+Optional&lt;String&gt; filtered = opt1.filter(s -> s.startsWith("H"));
+System.out.println("filter(H始まり):" + filtered.orElse("空"));  // Hello
+Optional&lt;String&gt; filtered2 = opt1.filter(s -> s.startsWith("Z"));
+System.out.println("filter(Z始まり):" + filtered2.orElse("空")); // 空
+
+// map: 値を変換して Optional に包む（空なら空のままパススルー）
+String mapped = opt1.map(String::toUpperCase).orElse("empty");
+System.out.println("map:          " + mapped);
+String mapped2 = opt2.map(String::toUpperCase).orElse("empty");
+System.out.println("map(空):      " + mapped2);</pre>
         <div class="output-block">
           <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
-          Hello<br>
-          default<br>
-          false<br>
-          Value: Hello<br>
-          mapped: HELLO
+          get:          Hello<br>
+          isPresent:    false<br>
+          orElse:       default<br>
+          orElseGet:    lazy-default<br>
+          orElseThrow:  値がありません<br>
+          ifPresent:    Hello<br>
+          filter(H始まり):Hello<br>
+          filter(Z始まり):空<br>
+          map:          HELLO<br>
+          map(空):      empty
         </div>
       </div>
     </section>

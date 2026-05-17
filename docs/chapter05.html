@@ -118,33 +118,68 @@ System.out.println(base.relativize(other)); // docs/readme.txt</pre>
       </table>
       <div class="code-group">
         <pre class="code-block">Path file = Path.of("sample.txt");
+Path dir  = Path.of("mydir");
+Path sub  = Path.of("mydir/sub/deep");
 
-// 書き込み (StandardOpenOption.APPENDで追記も可能)
+// exists: ファイル/ディレクトリの存在確認
+System.out.println("exists(before): " + Files.exists(file)); // false
+
+// createFile: 新規ファイル作成
+Files.createFile(file);
+System.out.println("exists(after):  " + Files.exists(file)); // true
+
+// createDirectory: 1階層のみ作成（中間ディレクトリがないと例外）
+Files.createDirectory(dir);
+
+// createDirectories: 中間ディレクトリも含めて全て作成
+Files.createDirectories(sub);
+
+// writeString / readString（Java 11+）
 Files.writeString(file, "Hello NIO.2!\nSecond Line\n");
-
-// 全体をStringで読む (Java 11+)
 String content = Files.readString(file);
 System.out.println("readString:\n" + content);
 
-// 行ごとに読む
+// readAllLines: 全行をList&lt;String&gt;で読む
 List&lt;String&gt; lines = Files.readAllLines(file);
 System.out.println("readAllLines: " + lines);
 
-// コピー (REPLACE_EXISTINGで上書き許可)
+// write: List&lt;String&gt;をファイルに書く
+Files.write(Path.of("lines.txt"), lines);
+
+// isDirectory: ディレクトリかどうか
+System.out.println("isDirectory(dir):  " + Files.isDirectory(dir));  // true
+System.out.println("isDirectory(file): " + Files.isDirectory(file)); // false
+
+// size: ファイルサイズ（バイト）
+System.out.println("size: " + Files.size(file) + " bytes");
+
+// copy: コピー（REPLACE_EXISTINGで上書き許可）
 Files.copy(file, Path.of("backup.txt"), StandardCopyOption.REPLACE_EXISTING);
 
-// 後片付け
+// move: 移動/リネーム
+Files.move(Path.of("backup.txt"), Path.of("renamed.txt"), StandardCopyOption.REPLACE_EXISTING);
+
+// delete: 削除（存在しない場合は NoSuchFileException）
+Files.delete(Path.of("renamed.txt"));
+
+// deleteIfExists: 存在する場合のみ削除（存在しなくても例外なし）
 Files.deleteIfExists(file);
-Files.deleteIfExists(Path.of("backup.txt"));</pre>
+Files.deleteIfExists(Path.of("lines.txt"));</pre>
         <div class="output-block">
           <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          exists(before): false<br>
+          exists(after):  true<br>
           readString:<br>
           Hello NIO.2!<br>
           Second Line<br>
           <br>
-          readAllLines: [Hello NIO.2!, Second Line]
+          readAllLines: [Hello NIO.2!, Second Line]<br>
+          isDirectory(dir):  true<br>
+          isDirectory(file): false<br>
+          size: 26 bytes
         </div>
       </div>
+
     </section>
 
     <section id="stream" class="card">

@@ -588,15 +588,34 @@ System.out.println("get(1): " + list.get(1));</pre>
         また、Java 9 で導入された <code class="inline">List.of()</code> は、要素の変更も追加・削除も一切できない「完全な不変リスト」を作成します。</p>
 
       <div class="code-group">
-        <pre class="code-block">List&lt;String&gt; immutableList = List.of("X", "Y", "Z");
-System.out.println("List.of(): " + immutableList);
+        <pre class="code-block">// new ArrayList&lt;&gt;(): 通常の可変リスト（最もよく使われる）
+List&lt;String&gt; arrayList = new ArrayList&lt;&gt;();
+arrayList.add("Cherry"); arrayList.add("Apple"); arrayList.add("Banana"); arrayList.add("Apple");
+System.out.println("ArrayList: " + arrayList); // [Cherry, Apple, Banana, Apple]
 
-// 以下のコードはコンパイルは通るが、実行時に UnsupportedOperationException が発生します
-// immutableList.add("W"); 
-// immutableList.set(0, "A");</pre>
+// Arrays.asList(): 固定サイズ。setは可、add/removeは例外
+List&lt;String&gt; asListEx = Arrays.asList("X", "Y", "Z");
+asListEx.set(0, "A"); // OK
+System.out.println("asList after set: " + asListEx); // [A, Y, Z]
+try { asListEx.add("W"); } catch (UnsupportedOperationException e) {
+    System.out.println("asList.add: " + e.getClass().getSimpleName()); // UnsupportedOperationException
+}
+
+// LinkedList: 中間挿入・削除が高速 (O(1))
+List&lt;String&gt; linked = new LinkedList&lt;&gt;(Arrays.asList("A", "B", "C"));
+linked.add(1, "X"); // index=1に挿入
+System.out.println("LinkedList: " + linked); // [A, X, B, C]
+
+// List.of(): Java9+. 完全不変（add/set/remove全て例外）
+List&lt;String&gt; immutableList = List.of("X", "Y", "Z");
+System.out.println("List.of(): " + immutableList);</pre>
         <div class="output-block">
           <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span>
             Output</span>
+          ArrayList: [Cherry, Apple, Banana, Apple]<br>
+          asList after set: [A, Y, Z]<br>
+          asList.add: UnsupportedOperationException<br>
+          LinkedList: [A, X, B, C]<br>
           List.of(): [X, Y, Z]
         </div>
       </div>
@@ -815,20 +834,43 @@ for (var entry : immutableMap.entrySet()) {
           class="inline">offerFirst() / pollLast()</code> 等を使うのが安全です（これらはエラー時にプログラムをクラッシュさせず、falseやnullを返します）。</p>
 
       <div class="code-group">
-        <pre class="code-block">Queue&lt;String&gt; queue = new LinkedList&lt;&gt;();
-queue.offer("First");
-queue.offer("Second");
+        <pre class="code-block">// Queue: FIFO操作 (例外スロー vs 特殊値返却)
+Queue&lt;String&gt; queue = new LinkedList&lt;&gt;();
+queue.add("First");    // 失敗時 IllegalStateException
+queue.offer("Second"); // 失敗時 false返却（推奨）
 queue.offer("Third");
 
-System.out.println("peek (先頭参照): " + queue.peek());
-System.out.println("poll (先頭取得&削除): " + queue.poll());
-System.out.println("残り: " + queue);</pre>
+System.out.println("element() 先頭参照:  " + queue.element()); // 空なら NoSuchElementException
+System.out.println("peek()    先頭参照:  " + queue.peek());    // 空なら null
+System.out.println("remove()  先頭取得&削除: " + queue.remove()); // 空なら NoSuchElementException
+System.out.println("poll()    先頭取得&削除: " + queue.poll());   // 空なら null
+System.out.println("残り: " + queue);
+
+// Deque: 両端キュー（先頭・末尾両方から操作可能）
+Deque&lt;String&gt; deque = new ArrayDeque&lt;&gt;();
+deque.offerFirst("B");  // 先頭に追加
+deque.offerLast("C");   // 末尾に追加
+deque.offerFirst("A");  // 先頭に追加 → [A, B, C]
+System.out.println("deque: " + deque);
+System.out.println("peekFirst(): " + deque.peekFirst()); // A
+System.out.println("peekLast():  " + deque.peekLast());  // C
+System.out.println("pollFirst(): " + deque.pollFirst()); // A
+System.out.println("pollLast():  " + deque.pollLast());  // C
+System.out.println("残り: " + deque); // [B]</pre>
         <div class="output-block">
           <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span>
             Output</span>
-          peek (先頭参照): First<br>
-          poll (先頭取得&削除): First<br>
-          残り: [Second, Third]
+          element() 先頭参照:  First<br>
+          peek()    先頭参照:  First<br>
+          remove()  先頭取得&削除: First<br>
+          poll()    先頭取得&削除: Second<br>
+          残り: [Third]<br>
+          deque: [A, B, C]<br>
+          peekFirst(): A<br>
+          peekLast():  C<br>
+          pollFirst(): A<br>
+          pollLast():  C<br>
+          残り: [B]
         </div>
       </div>
     </section>
@@ -926,14 +968,19 @@ System.out.println("min: " + Collections.min(nums));
 System.out.println("frequency of 1 (1の出現回数): " + Collections.frequency(nums, 1));
 
 Collections.sort(nums); // リスト自身を昇順に書き換える
-System.out.println("sorted: " + nums);</pre>
+System.out.println("sorted:   " + nums);
+
+// reverse(): リストの順序を逆にする
+Collections.reverse(nums);
+System.out.println("reversed: " + nums);</pre>
         <div class="output-block">
           <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span>
             Output</span>
           max: 9<br>
           min: 1<br>
           frequency of 1 (1の出現回数): 2<br>
-          sorted: [1, 1, 3, 4, 5, 9]
+          sorted:   [1, 1, 3, 4, 5, 9]<br>
+          reversed: [9, 5, 4, 3, 1, 1]
         </div>
       </div>
     </section>

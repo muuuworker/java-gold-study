@@ -84,13 +84,32 @@ class OldApi {
 }
 
 // @SuppressWarnings: 特定の警告を抑制
-@SuppressWarnings("unchecked") // ジェネリクス関連の未チェック警告を抑制
+@SuppressWarnings("unchecked")
 public void rawTypeMethod() {
     List rawList = new ArrayList(); // 通常は警告が出るが抑制される
     rawList.add("test");
-}</pre>
+}
+
+// @FunctionalInterface: SAM（抽象メソッド1つ）でないとコンパイルエラー
+@FunctionalInterface
+interface Transformer {
+    String transform(String s);
+    // void extra() {} // 2つ目の抽象メソッドを追加するとコンパイルエラー
+}
+Transformer upper = s -> s.toUpperCase();
+System.out.println(upper.transform("hello")); // HELLO
+
+// @SafeVarargs: ジェネリクスの可変長引数に関する警告を抑制
+@SafeVarargs
+public final &lt;T&gt; void printAll(T... items) {
+    for (T item : items) System.out.print(item + " ");
+    System.out.println();
+}
+printAll("a", "b", "c"); // ヘィープ汚染の警告なしに実行</pre>
         <div class="output-block">
           <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          HELLO<br>
+          a b c<br>
           コンパイル時に検証・警告制御が行われる（実行時の出力はなし）
         </div>
       </div>
@@ -132,9 +151,10 @@ public void rawTypeMethod() {
       <div class="code-group">
         <pre class="code-block">import java.lang.annotation.*;
 
-// カスタムアノテーションの定義
-@Retention(RetentionPolicy.RUNTIME) // リフレクションで取得可能にする
-@Target(ElementType.METHOD)         // メソッドにのみ付与可能
+// @Target: 付与できる場所をTYPE（クラス/インタフェース）とMETHODに限定
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD,
+         ElementType.CONSTRUCTOR, ElementType.PARAMETER, ElementType.LOCAL_VARIABLE})
 public @interface TestCase {
     String value() default "テスト"; // "value"という要素名なら省略可
     int priority() default 1;
@@ -142,9 +162,10 @@ public @interface TestCase {
 }
 
 // 使用例
+@TestCase                                              // TYPEに付与
 public class MyTests {
-    @TestCase("ログインテスト")               // value=省略, priority=1(デフォルト)
-    public void testLogin() { }
+    @TestCase("ログインテスト")                        // METHODに付与
+    public void testLogin(@TestCase String user) { }  // PARAMETERに付与
 
     @TestCase(value = "決済テスト", priority = 10, tags = {"payment", "critical"})
     public void testPayment() { }

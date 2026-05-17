@@ -102,13 +102,33 @@
         <tr><td><code class="inline">TERMINATED</code></td><td>処理が完了し、終了した状態</td></tr>
       </table>
       <div class="code-group">
-        <pre class="code-block">// Runnableをラムダで実装してスレッド起動
-Thread t1 = new Thread(() -> System.out.println("Thread running: " + Thread.currentThread().getName()));
-t1.start(); // start() を呼ぶことで別スレッドが開始される（run()を直接呼ぶのはNG）
+        <pre class="code-block">// ① Threadクラスを継承
+class MyThread extends Thread {
+    @Override public void run() { System.out.println("extends Thread: " + getName()); }
+}
+new MyThread().start();
 
-// join() : t1の完了を待ってから次の処理へ
+// ② Runnableを実装（推奨）
+class MyTask implements Runnable {
+    @Override public void run() { System.out.println("implements Runnable: " + Thread.currentThread().getName()); }
+}
+new Thread(new MyTask()).start();
+
+// ③ ラムダ式（最も簡潔。Java 8以降推奨）
+Thread t1 = new Thread(() -> System.out.println("lambda Thread: " + Thread.currentThread().getName()));
+t1.start();
+
+// join(): 対象スレッドの完了を待ってから次の処理へ
 t1.join();
-System.out.println("Main thread continues after t1 finishes.");</pre>
+System.out.println("Main thread continues after t1.");
+
+// Thread.State: スレッドの状態を確認
+Thread t2 = new Thread(() -> { try { Thread.sleep(50); } catch (Exception e) {} });
+System.out.println("before start: " + t2.getState());  // NEW
+t2.start();
+System.out.println("after start:  " + t2.getState());  // RUNNABLE
+t2.join();
+System.out.println("after join:   " + t2.getState());  // TERMINATED</pre>
         <div class="output-block">
           <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
           Thread running: Thread-0<br>
@@ -130,15 +150,29 @@ System.out.println("Main thread continues after t1 finishes.");</pre>
       <h3><span class="material-symbols-outlined">description</span> ExecutorServiceの基本的な使い方</h3>
       <p>スレッドを直接生成・管理する代わりに、<code class="inline">ExecutorService</code> にタスクを提出し、スレッドプールで効率よく処理します。<strong>必ず shutdown() を呼ぶこと</strong>が重要です。</p>
       <div class="code-group">
-        <pre class="code-block">ExecutorService executor = Executors.newFixedThreadPool(2);
+        <pre class="code-block">// newFixedThreadPool: 固定n本のスレッドプール
+ExecutorService fixed = Executors.newFixedThreadPool(2);
+fixed.submit(() -> System.out.println("Fixed: " + Thread.currentThread().getName()));
+fixed.shutdown();
 
-// Runnableタスクの提出（戻り値なし）
-executor.submit(() -> System.out.println("Task A by " + Thread.currentThread().getName()));
-executor.submit(() -> System.out.println("Task B by " + Thread.currentThread().getName()));
+// newCachedThreadPool: 必要に応じてスレッドを生成・再利用（短命な大量タスク向け）
+ExecutorService cached = Executors.newCachedThreadPool();
+for (int i = 0; i < 3; i++) {
+    final int n = i;
+    cached.submit(() -> System.out.println("Cached task-" + n + " by " + Thread.currentThread().getName()));
+}
+cached.shutdown();
 
-// 使い終わったら必ずshutdown()を呼ぶ
-executor.shutdown(); // 新しいタスクの受付を停止し、既存タスクの完了を待つ
-// executor.shutdownNow(); // 実行中タスクを割り込みで強制停止</pre>
+// newSingleThreadExecutor: 1本のスレッドで直列実行を保証
+ExecutorService single = Executors.newSingleThreadExecutor();
+single.submit(() -> System.out.println("Single: task1"));
+single.submit(() -> System.out.println("Single: task2")); // 必ずtask1の後
+single.shutdown();
+
+// newScheduledThreadPool: 遅延/定期実行対応
+ScheduledExecutorService scheduled = Executors.newScheduledThreadPool(1);
+scheduled.schedule(() -> System.out.println("Scheduled after 100ms"), 100, TimeUnit.MILLISECONDS);
+scheduled.shutdown();</pre>
         <div class="output-block">
           <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
           Task A by pool-1-thread-1<br>
@@ -250,17 +284,33 @@ System.out.println("Count: " + counter.getCount()); // 必ず 1000</pre>
       <h3><span class="material-symbols-outlined">description</span> ConcurrentHashMapの使用例</h3>
       <p>通常の <code class="inline">HashMap</code> はスレッドセーフではなく、並列処理で使うとデータ破損が起こります。<code class="inline">ConcurrentHashMap</code> を使うと安全に並列アクセスできます。</p>
       <div class="code-group">
-        <pre class="code-block">ConcurrentMap&lt;String, Integer&gt; map = new ConcurrentHashMap&lt;&gt;();
+        <pre class="code-block">// CopyOnWriteArrayList: 書き込み時にコピー。読み取り多数向け
+CopyOnWriteArrayList&lt;String&gt; cowList = new CopyOnWriteArrayList&lt;&gt;();
+cowList.add("A"); cowList.add("B"); cowList.add("C");
+System.out.println("CopyOnWriteArrayList: " + cowList);
+
+// ConcurrentHashMap: セグメントロックで高スループット
+ConcurrentMap&lt;String, Integer&gt; map = new ConcurrentHashMap&lt;&gt;();
 map.put("apple", 1);
 map.put("banana", 2);
+map.computeIfAbsent("cherry", k -> k.length()); // キーなし時のみ追加
+map.merge("apple", 10, Integer::sum);           // apple: 1+10=11
+System.out.println("ConcurrentHashMap: " + map);
 
-// computeIfAbsent: キーが存在しない場合のみ値を計算・追加
-map.computeIfAbsent("cherry", k -> k.length());
+// ConcurrentLinkedQueue: ロックフリーで高パフォーマンスなキュー
+Queue&lt;String&gt; queue = new ConcurrentLinkedQueue&lt;&gt;();
+queue.offer("first"); queue.offer("second");
+System.out.println("ConcurrentLinkedQueue poll: " + queue.poll()); // first
 
-// merge: キーが存在する場合は既存値と新値をマージ
-map.merge("apple", 10, Integer::sum); // apple: 1 + 10 = 11
+// BlockingQueue (LinkedBlockingQueue): put/takeでブロック。Producer-Consumerパターン向け
+BlockingQueue&lt;String&gt; bq = new LinkedBlockingQueue&lt;&gt;(10);
+bq.put("item1"); // キューが満杯ならブロック
+System.out.println("BlockingQueue take: " + bq.take()); // 空ならブロック
 
-System.out.println(map); // {apple=11, banana=2, cherry=6}</pre>
+// Collections.synchronizedList: 旧来のスレッドセーフラッパー
+List&lt;String&gt; syncList = Collections.synchronizedList(new ArrayList&lt;&gt;());
+syncList.add("x"); syncList.add("y");
+System.out.println("synchronizedList: " + syncList);</pre>
         <div class="output-block">
           <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
           {apple=11, banana=2, cherry=6}
@@ -281,8 +331,30 @@ System.out.println(map); // {apple=11, banana=2, cherry=6}</pre>
       <h3><span class="material-symbols-outlined">description</span> synchronized不要でスレッドセーフなカウンター</h3>
       <p><code class="inline">AtomicInteger</code> などはCAS（Compare-And-Swap）というCPUの命令を使って、<code class="inline">synchronized</code> なしでスレッドセーフな操作を実現します。オーバーヘッドが少なく高速です。</p>
       <div class="code-group">
-        <pre class="code-block">AtomicInteger atomicCount = new AtomicInteger(0);
+        <pre class="code-block">// AtomicInteger: getAndIncrement（現在値を返してから+1）/ compareAndSet（CAS操作）
+AtomicInteger ai = new AtomicInteger(0);
+System.out.println("getAndIncrement: " + ai.getAndIncrement()); // 0
+System.out.println("incrementAndGet: " + ai.incrementAndGet()); // 2
+System.out.println("compareAndSet:   " + ai.compareAndSet(2, 100)); // true (2→100)
+System.out.println("value:           " + ai.get()); // 100
 
+// AtomicLong: incrementAndGet / addAndGet
+AtomicLong al = new AtomicLong(10L);
+System.out.println("incrementAndGet: " + al.incrementAndGet()); // 11
+System.out.println("addAndGet(5):    " + al.addAndGet(5));      // 16
+
+// AtomicBoolean: compareAndSet
+AtomicBoolean flag = new AtomicBoolean(false);
+System.out.println("compareAndSet:   " + flag.compareAndSet(false, true)); // true
+System.out.println("value:           " + flag.get()); // true
+
+// AtomicReference: 任意のオブジェクトをCAS操作
+AtomicReference&lt;String&gt; ref = new AtomicReference&lt;&gt;("initial");
+System.out.println("compareAndSet:   " + ref.compareAndSet("initial", "updated"));
+System.out.println("value:           " + ref.get()); // updated
+
+// 並列カウントの確認
+AtomicInteger atomicCount = new AtomicInteger(0);
 ExecutorService exec = Executors.newFixedThreadPool(10);
 for (int i = 0; i &lt; 1000; i++) {
     exec.submit(atomicCount::incrementAndGet);

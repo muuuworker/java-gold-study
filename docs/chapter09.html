@@ -80,6 +80,48 @@
         <tr><td><code class="inline">IOException</code></td><td>検査</td><td>ファイルI/O操作</td></tr>
         <tr><td><code class="inline">SQLException</code></td><td>検査</td><td>JDBC操作</td></tr>
       </table>
+      <div class="code-group">
+        <pre class="code-block">// NullPointerException: nullへのメソッド呼び出し
+try { String s = null; s.length(); }
+catch (NullPointerException e) { System.out.println("NPE: " + e.getClass().getSimpleName()); }
+
+// ArrayIndexOutOfBoundsException: 配列の範囲外アクセス
+try { int[] a = new int[3]; a[5] = 1; }
+catch (ArrayIndexOutOfBoundsException e) { System.out.println("AIOOB: " + e.getMessage()); }
+
+// ClassCastException: 不正なキャスト
+try { Object obj = "hello"; Integer n = (Integer) obj; }
+catch (ClassCastException e) { System.out.println("ClassCast"); }
+
+// NumberFormatException: 文字列→数値変換失敗
+try { Integer.parseInt("abc"); }
+catch (NumberFormatException e) { System.out.println("NumberFormat: " + e.getMessage()); }
+
+// IllegalArgumentException: 不正な引数（例: Thread.sleep(-1)）
+try { Thread.sleep(-1); }
+catch (IllegalArgumentException e) { System.out.println("IllegalArg: " + e.getMessage()); }
+catch (InterruptedException e) { /* ignore */ }
+
+// IllegalStateException: 不正な状態でのメソッド呼び出し（例: next()前のremove()）
+try {
+    java.util.Iterator&lt;String&gt; it = new java.util.ArrayList&lt;&gt;(List.of("a")).iterator();
+    it.remove(); // next()を呼ぶ前はNG
+} catch (IllegalStateException e) { System.out.println("IllegalState"); }
+
+// UnsupportedOperationException: 不変コレクション変更
+try { List.of("a", "b").add("c"); }
+catch (UnsupportedOperationException e) { System.out.println("UnsupportedOp"); }</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          NPE: NullPointerException<br>
+          AIOOB: Index 5 out of bounds for length 3<br>
+          ClassCast<br>
+          NumberFormat: For input string: "abc"<br>
+          IllegalArg: timeout value is negative<br>
+          IllegalState<br>
+          UnsupportedOp
+        </div>
+      </div>
     </section>
 
     <section id="try-catch" class="card">

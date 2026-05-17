@@ -65,20 +65,35 @@
         <tr><td>システムデフォルト</td><td><code class="inline">Locale.getDefault()</code></td></tr>
       </table>
       <div class="code-group">
-        <pre class="code-block">Locale ja = Locale.JAPAN;
+        <pre class="code-block">// 定数フィールド
+Locale ja = Locale.JAPAN;
 Locale us = Locale.US;
 Locale fr = Locale.FRANCE;
 
 System.out.println("言語コード: " + ja.getLanguage()); // ja
 System.out.println("国コード:   " + ja.getCountry());  // JP
 System.out.println("表示名(ja): " + ja.getDisplayName(ja)); // 日本語 (日本)
-System.out.println("表示名(en): " + ja.getDisplayName(us)); // Japanese (Japan)</pre>
+System.out.println("表示名(en): " + ja.getDisplayName(us)); // Japanese (Japan)
+
+// Locale.Builder: 最も正確な生成方法（推奨）
+Locale builtLocale = new Locale.Builder().setLanguage("ko").setRegion("KR").build();
+System.out.println("Builder: " + builtLocale); // ko_KR
+
+// Locale.forLanguageTag: BCP 47 タグ文字列から生成
+Locale fromTag = Locale.forLanguageTag("zh-TW");
+System.out.println("forLanguageTag: " + fromTag); // zh_TW
+
+// Locale.getDefault: システムのデフォルトLocale
+System.out.println("デフォルト: " + Locale.getDefault()); // 例: ja_JP</pre>
         <div class="output-block">
           <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
           言語コード: ja<br>
           国コード:   JP<br>
           表示名(ja): 日本語 (日本)<br>
-          表示名(en): Japanese (Japan)
+          表示名(en): Japanese (Japan)<br>
+          Builder: ko_KR<br>
+          forLanguageTag: zh_TW<br>
+          デフォルト: ja_JP
         </div>
       </div>
     </section>
@@ -96,31 +111,36 @@ System.out.println("表示名(en): " + ja.getDisplayName(us)); // Japanese (Japa
       <div class="code-group">
         <pre class="code-block">double price = 12345.678;
 
-// 通貨フォーマット
+// getInstance: 汎用的な数値フォーマット
+NumberFormat numFmt = NumberFormat.getInstance(Locale.US);
+numFmt.setMinimumFractionDigits(2);
+numFmt.setMaximumFractionDigits(2);
+System.out.println("数値:       " + numFmt.format(price)); // 12,345.68
+
+// getCurrencyInstance: 通貨フォーマット（¥, $等のシンボル付き）
 NumberFormat usFormat = NumberFormat.getCurrencyInstance(Locale.US);
 NumberFormat jpFormat = NumberFormat.getCurrencyInstance(Locale.JAPAN);
-System.out.println("USD: " + usFormat.format(price));  // $12,345.68
-System.out.println("JPY: " + jpFormat.format(price));  // ¥12,346
+System.out.println("USD: " + usFormat.format(price)); // $12,345.68
+System.out.println("JPY: " + jpFormat.format(price)); // ¥12,346
 
-// 数値フォーマット (小数点以下の桁数制御)
-NumberFormat numFmt = NumberFormat.getInstance(Locale.US);
-numFmt.setMinimumFractionDigits(2); // 最低2桁
-numFmt.setMaximumFractionDigits(2); // 最高2桁
-System.out.println("数値: " + numFmt.format(price)); // 12,345.68
-
-// パーセント
+// getPercentInstance: パーセントフォーマット
 NumberFormat pctFmt = NumberFormat.getPercentInstance(Locale.US);
 System.out.println("パーセント: " + pctFmt.format(0.756)); // 76%
+
+// getIntegerInstance: 整数フォーマット（小数点以下を丸める）
+NumberFormat intFmt = NumberFormat.getIntegerInstance(Locale.US);
+System.out.println("整数:       " + intFmt.format(price)); // 12,346
 
 // 文字列をパース
 Number parsed = usFormat.parse("$1,234.56");
 System.out.println("パース結果: " + parsed.doubleValue()); // 1234.56</pre>
         <div class="output-block">
           <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          数値:       12,345.68<br>
           USD: $12,345.68<br>
           JPY: ¥12,346<br>
-          数値: 12,345.68<br>
           パーセント: 76%<br>
+          整数:       12,346<br>
           パース結果: 1234.56
         </div>
       </div>
@@ -148,7 +168,7 @@ System.out.println("パース結果: " + parsed.doubleValue()); // 1234.56</pre>
 LocalTime time = LocalTime.of(14, 30, 45);
 LocalDateTime dateTime = LocalDateTime.of(date, time);
 
-// フォーマット（日時→文字列）
+// yyyy/MM/dd HH:mm:ss
 DateTimeFormatter fmt1 = DateTimeFormatter.ofPattern("yyyy年MM月dd日");
 DateTimeFormatter fmt2 = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
 DateTimeFormatter fmt3 = DateTimeFormatter.ofPattern("MM-dd-yyyy", Locale.US);
@@ -157,11 +177,20 @@ System.out.println(date.format(fmt1));     // 2024年05月07日
 System.out.println(dateTime.format(fmt2)); // 2024/05/07 14:30:45
 System.out.println(date.format(fmt3));     // 05-07-2024
 
+// hh(時12時間) + a(AM/PM)
+DateTimeFormatter fmt12h = DateTimeFormatter.ofPattern("hh:mm a", Locale.US);
+System.out.println(time.format(fmt12h)); // 02:30 PM
+
+// E(曜日短縮) + z(タイムゾーン名) (注: zはZonedDateTimeが必要)
+ZonedDateTime zdt = ZonedDateTime.of(dateTime, ZoneId.of("Asia/Tokyo"));
+DateTimeFormatter fmtE = DateTimeFormatter.ofPattern("E, yyyy/MM/dd HH:mm z", Locale.ENGLISH);
+System.out.println(zdt.format(fmtE)); // Tue, 2024/05/07 14:30 JST
+
 // パース（文字列→日時オブジェクト）
 LocalDate parsed = LocalDate.parse("2024年05月07日", fmt1);
 System.out.println("パース: " + parsed); // 2024-05-07
 
-// 定義済みフォーマッタ
+// 定義済フォーマッタ
 System.out.println(dateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
 // 2024-05-07T14:30:45</pre>
         <div class="output-block">
@@ -169,6 +198,8 @@ System.out.println(dateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
           2024年05月07日<br>
           2024/05/07 14:30:45<br>
           05-07-2024<br>
+          02:30 PM<br>
+          Tue, 2024/05/07 14:30 JST<br>
           パース: 2024-05-07<br>
           2024-05-07T14:30:45
         </div>

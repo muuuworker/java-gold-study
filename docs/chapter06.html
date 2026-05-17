@@ -172,21 +172,29 @@ try (Connection conn = DriverManager.getConnection(url, "sa", "");
       <div class="code-group">
         <pre class="code-block">try (Connection conn = DriverManager.getConnection(url, "sa", "");
      Statement stmt = conn.createStatement();
-     // ResultSetもtry-with-resourcesでAutoCloseableとして閉じられる
      ResultSet rs = stmt.executeQuery("SELECT * FROM products ORDER BY id")) {
 
-    // rs.next() が false を返すまでループ
     while (rs.next()) {
-        // カラム名で取得（推奨）
-        int id = rs.getInt("id");
-        String name = rs.getString("name");
+        // getString / getInt: カラム名で取得（推奨）
+        String name  = rs.getString("name");
+        int    price = rs.getInt("price");
 
         // カラムインデックスで取得（1始まり）
-        int price = rs.getInt(3);
+        int id = rs.getInt(1);
 
         System.out.printf("id=%d, name=%s, price=%d%n", id, name, price);
     }
-}</pre>
+}
+
+// --- 各型の取得メソッド例（テーブル定義に合わせて型を使い分ける）---
+// ResultSet rs = stmt.executeQuery("SELECT ...");
+// while (rs.next()) {
+//     long   bigId   = rs.getLong("big_id");       // getLong
+//     double ratio   = rs.getDouble("ratio");      // getDouble
+//     boolean active = rs.getBoolean("is_active"); // getBoolean
+//     java.sql.Date d = rs.getDate("created_at"); // getDate
+//     Object  obj    = rs.getObject("any_col");    // getObject（型不明の場合）
+// }</pre>
         <div class="output-block">
           <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
           id=1, name=Coffee, price=500<br>
@@ -210,22 +218,31 @@ try (Connection conn = DriverManager.getConnection(url, "sa", "");
       <p><code class="inline">setAutoCommit(false)</code> にすると、SQL実行後に明示的に <code class="inline">commit()</code> を呼ぶまでDBへの変更は確定されません。例外発生時は必ず <code class="inline">rollback()</code> を呼んでください。</p>
       <div class="code-group">
         <pre class="code-block">try (Connection conn = DriverManager.getConnection(url, "sa", "")) {
-    conn.setAutoCommit(false); // 自動コミットをOFF
+    conn.setAutoCommit(false); // 自動コミットをOFF（トランザクション開始）
 
     try (Statement stmt = conn.createStatement()) {
         stmt.executeUpdate("UPDATE products SET price = 600 WHERE id = 1");
+
+        // setSavepoint: セーブポイントを設定（部分ロールバックが可能）
+        Savepoint sp = conn.setSavepoint("after_first_update");
+
         stmt.executeUpdate("UPDATE products SET price = 400 WHERE id = 2");
 
-        conn.commit(); // 両方の更新をまとめて確定
+        // rollback(savepoint): id=2の更新だけを取り消す（id=1の更新は残る）
+        conn.rollback(sp);
+        System.out.println("id=2の更新をセーブポイントまでロールバック");
+
+        conn.commit(); // id=1の更新のみ確定
         System.out.println("トランザクションコミット成功");
 
     } catch (SQLException e) {
-        conn.rollback(); // どちらかが失敗したら全て取り消し
-        System.out.println("ロールバックしました: " + e.getMessage());
+        conn.rollback(); // 全て取り消し
+        System.out.println("ロールバック: " + e.getMessage());
     }
 }</pre>
         <div class="output-block">
           <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          id=2の更新をセーブポイントまでロールバック<br>
           トランザクションコミット成功
         </div>
       </div>

@@ -93,7 +93,7 @@ public final class Money {
     }
 }
 
-// 不変コレクション
+// List.of(): null要素不可、変更不可
 List&lt;String&gt; immutable = List.of("A", "B", "C");
 try {
     immutable.add("D"); // UnsupportedOperationException
@@ -101,17 +101,38 @@ try {
     System.out.println("変更不可: " + e.getClass().getSimpleName());
 }
 
-// List.copyOf: 既存の可変リストから不変コピーを作成
+// List.copyOf(): 既存リストの防御的コピー（変更不可）
 List&lt;String&gt; mutable = new ArrayList&lt;&gt;(Arrays.asList("X", "Y"));
 List&lt;String&gt; copied = List.copyOf(mutable);
 mutable.add("Z");
 System.out.println("元リスト: " + mutable); // [X, Y, Z]
-System.out.println("コピー:   " + copied);  // [X, Y] (影響を受けない)</pre>
+System.out.println("コピー:   " + copied);  // [X, Y] (影響を受けない)
+
+// Collections.unmodifiableList(): 元リストの変更はビューに反映される
+List&lt;String&gt; base = new ArrayList&lt;&gt;(Arrays.asList("P", "Q"));
+List&lt;String&gt; unmod = Collections.unmodifiableList(base);
+base.add("R"); // 元リストへの変更
+System.out.println("unmodifiable: " + unmod); // [P, Q, R] ← 反映される！
+
+// Map.of(): 順序不定、null不可
+Map&lt;String, Integer&gt; mapOf = Map.of("a", 1, "b", 2, "c", 3);
+System.out.println("Map.of: " + mapOf);
+
+// Map.ofEntries(): 10エントリ超の場合はこちらを使う
+Map&lt;String, Integer&gt; mapEntries = Map.ofEntries(
+    Map.entry("x", 10),
+    Map.entry("y", 20),
+    Map.entry("z", 30)
+);
+System.out.println("Map.ofEntries: " + mapEntries);</pre>
         <div class="output-block">
           <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
           変更不可: UnsupportedOperationException<br>
           元リスト: [X, Y, Z]<br>
-          コピー:   [X, Y]
+          コピー:   [X, Y]<br>
+          unmodifiable: [P, Q, R]<br>
+          Map.of: {a=1, b=2, c=3}<br>
+          Map.ofEntries: {x=10, y=20, z=30}
         </div>
       </div>
     </section>

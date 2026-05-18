@@ -306,7 +306,7 @@
   <div class="drawer-overlay" id="drawerOverlay"></div>
   <nav class="drawer" id="drawer">
     <h2>目次</h2>
-    <a href="#basic" class="drawer-link">1. 基本と4大インタフェース</a>
+    <a href="#basic" class="drawer-link">1. 主な関数型インタフェース</a>
     <a href="#lambda-rules" class="drawer-link">2. ラムダ式の構文ルール</a>
     <a href="#method-ref" class="drawer-link">3. メソッド参照</a>
     <a href="#variable-capture" class="drawer-link">4. 変数キャプチャ</a>
@@ -317,7 +317,7 @@
   <main class="main-content">
 
     <section id="basic" class="card">
-      <h2 class="section-title">1. 基本定義と4大関数型インタフェース</h2>
+      <h2 class="section-title">1. 主な関数型インタフェース</h2>
 
       <h3><span class="material-symbols-outlined">table</span> 主な関数型インタフェース</h3>
       <table>
@@ -494,6 +494,68 @@ public class Main {
           <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span>
             Output</span>
           Checker Result: true
+        </div>
+      </div>
+
+      <h3><span class="material-symbols-outlined">merge</span> 関数型インタフェースの合成メソッド</h3>
+      <p>関数型インタフェースには、複数の処理を<strong>つなぎ合わせる（合成する）</strong> default メソッドが用意されています。</p>
+
+      <h4 style="margin: 16px 0 8px; font-size: 15px; color: var(--md-sys-color-primary);">Function の合成 — <code class="inline">andThen</code> / <code class="inline">compose</code></h4>
+      <div class="code-group">
+        <pre class="code-block">Function&lt;Integer, Integer&gt; times2 = x -&gt; x * 2;
+Function&lt;Integer, Integer&gt; plus10 = x -&gt; x + 10;
+
+// andThen: 自分を適用してから、引数の関数を適用する (f → g の順)
+Function&lt;Integer, Integer&gt; times2ThenPlus10 = times2.andThen(plus10);
+System.out.println(times2ThenPlus10.apply(3)); // (3*2)+10 = 16
+
+// compose: 引数の関数を先に適用してから、自分を適用する (g → f の逆順)
+Function&lt;Integer, Integer&gt; plus10ThenTimes2 = times2.compose(plus10);
+System.out.println(plus10ThenTimes2.apply(3)); // (3+10)*2 = 26</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          16<br>
+          26
+        </div>
+      </div>
+
+      <h4 style="margin: 16px 0 8px; font-size: 15px; color: var(--md-sys-color-primary);">Predicate の合成 — <code class="inline">and</code> / <code class="inline">or</code> / <code class="inline">negate</code></h4>
+      <div class="code-group">
+        <pre class="code-block">Predicate&lt;Integer&gt; isPositive = n -&gt; n &gt; 0;
+Predicate&lt;Integer&gt; isEven    = n -&gt; n % 2 == 0;
+
+// and: 両方の条件を満たす場合 true (論理AND)
+Predicate&lt;Integer&gt; isPositiveAndEven = isPositive.and(isEven);
+System.out.println(isPositiveAndEven.test(4));  // true  (4 &gt; 0 かつ 4%2==0)
+System.out.println(isPositiveAndEven.test(3));  // false (3 &gt; 0 だが 3%2!=0)
+
+// or: どちらか一方を満たす場合 true (論理OR)
+Predicate&lt;Integer&gt; isPositiveOrEven = isPositive.or(isEven);
+System.out.println(isPositiveOrEven.test(-2)); // true  (-2&lt;=0 だが -2%2==0)
+System.out.println(isPositiveOrEven.test(-3)); // false (-3&lt;=0 かつ -3%2!=0)
+
+// negate: 条件を反転する (論理NOT)
+Predicate&lt;Integer&gt; isNegative = isPositive.negate();
+System.out.println(isNegative.test(-5)); // true  (0より大きくない)
+System.out.println(isNegative.test(5));  // false (0より大きい)</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          true<br>false<br>true<br>false<br>true<br>false
+        </div>
+      </div>
+
+      <h4 style="margin: 16px 0 8px; font-size: 15px; color: var(--md-sys-color-primary);">Consumer の合成 — <code class="inline">andThen</code></h4>
+      <div class="code-group">
+        <pre class="code-block">Consumer&lt;String&gt; print  = s -&gt; System.out.println("print:  " + s);
+Consumer&lt;String&gt; log    = s -&gt; System.out.println("log:    " + s.toUpperCase());
+
+// andThen: 自分を実行してから、引数の Consumer を実行する
+Consumer&lt;String&gt; printThenLog = print.andThen(log);
+printThenLog.accept("hello");</pre>
+        <div class="output-block">
+          <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
+          print:  hello<br>
+          log:    HELLO
         </div>
       </div>
     </section>

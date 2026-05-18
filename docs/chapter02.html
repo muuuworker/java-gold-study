@@ -319,111 +319,148 @@
     <section id="basic" class="card">
       <h2 class="section-title">1. 基本定義と4大関数型インタフェース</h2>
 
-      <h3><span class="material-symbols-outlined">table</span> 4大基本関数型インタフェースとその派生</h3>
+      <h3><span class="material-symbols-outlined">table</span> 主な関数型インタフェース</h3>
       <table>
         <tr>
-          <th>インターフェース</th>
-          <th>抽象メソッド</th>
-          <th>引数</th>
-          <th>戻り値</th>
-          <th>主な用途</th>
+          <th>パッケージ</th>
+          <th>インタフェース</th>
+          <th>戻り値型</th>
+          <th>メソッド</th>
         </tr>
         <tr>
-          <td><code class="inline">Predicate&lt;T&gt;</code></td>
-          <td><code class="inline">boolean test(T t)</code></td>
-          <td>1</td>
-          <td><code class="inline">boolean</code></td>
-          <td>条件判定・フィルタリング</td>
-        </tr>
-        <tr>
-          <td><code class="inline">Consumer&lt;T&gt;</code></td>
-          <td><code class="inline">void accept(T t)</code></td>
-          <td>1</td>
-          <td>なし</td>
-          <td>出力処理、状態変更</td>
-        </tr>
-        <tr>
-          <td><code class="inline">Function&lt;T, R&gt;</code></td>
-          <td><code class="inline">R apply(T t)</code></td>
-          <td>1</td>
-          <td>任意の型</td>
-          <td>値の変換、データマッピング</td>
-        </tr>
-        <tr>
+          <td>java.util.function</td>
           <td><code class="inline">Supplier&lt;T&gt;</code></td>
-          <td><code class="inline">T get()</code></td>
-          <td>なし</td>
-          <td>任意の型</td>
-          <td>インスタンス生成、遅延評価</td>
-        </tr>
-        <tr style="border-top: 2px solid var(--md-sys-color-outline);">
-          <td><code class="inline">UnaryOperator&lt;T&gt;</code></td>
-          <td><code class="inline">T apply(T t)</code></td>
-          <td>1</td>
-          <td>同型</td>
-          <td>引数と戻り値が同じ型の変換<br>（Functionの派生）</td>
+          <td>T</td>
+          <td><code class="inline">get()</code></td>
         </tr>
         <tr>
-          <td><code class="inline">BinaryOperator&lt;T&gt;</code></td>
-          <td><code class="inline">T apply(T t1, T t2)</code></td>
-          <td>2</td>
-          <td>同型</td>
-          <td>2つの同型データから1つを算出<br>（BiFunctionの派生）</td>
+          <td>java.util.function</td>
+          <td><code class="inline">Consumer&lt;T&gt;</code></td>
+          <td>void</td>
+          <td><code class="inline">accept(T)</code></td>
         </tr>
         <tr>
+          <td>java.util.function</td>
+          <td><code class="inline">BiConsumer&lt;T, U&gt;</code></td>
+          <td>void</td>
+          <td><code class="inline">accept(T, U)</code></td>
+        </tr>
+        <tr>
+          <td>java.util.function</td>
+          <td><code class="inline">Predicate&lt;T&gt;</code></td>
+          <td>boolean</td>
+          <td><code class="inline">test(T)</code></td>
+        </tr>
+        <tr>
+          <td>java.util.function</td>
+          <td><code class="inline">BiPredicate&lt;T, U&gt;</code></td>
+          <td>boolean</td>
+          <td><code class="inline">test(T, U)</code></td>
+        </tr>
+        <tr>
+          <td>java.util.function</td>
+          <td><code class="inline">Function&lt;T, R&gt;</code></td>
+          <td>R</td>
+          <td><code class="inline">apply(T)</code></td>
+        </tr>
+        <tr>
+          <td>java.util.function</td>
           <td><code class="inline">BiFunction&lt;T, U, R&gt;</code></td>
-          <td><code class="inline">R apply(T t, U u)</code></td>
-          <td>2</td>
-          <td>任意の型</td>
-          <td>2引数のデータマッピング</td>
+          <td>R</td>
+          <td><code class="inline">apply(T, U)</code></td>
+        </tr>
+        <tr>
+          <td>java.util.function</td>
+          <td><code class="inline">UnaryOperator&lt;T&gt;</code></td>
+          <td>T</td>
+          <td><code class="inline">apply(T)</code></td>
+        </tr>
+        <tr>
+          <td>java.util.function</td>
+          <td><code class="inline">BinaryOperator&lt;T&gt;</code></td>
+          <td>T</td>
+          <td><code class="inline">apply(T, T)</code></td>
+        </tr>
+        <tr>
+          <td>java.lang</td>
+          <td><code class="inline">Runnable</code></td>
+          <td>void</td>
+          <td><code class="inline">run()</code></td>
+        </tr>
+        <tr>
+          <td>java.util.concurrent</td>
+          <td><code class="inline">Callable&lt;V&gt;</code></td>
+          <td>V</td>
+          <td><code class="inline">call()</code></td>
         </tr>
       </table>
 
-      <h3><span class="material-symbols-outlined">code</span> 4大基本インタフェースと派生の使用例</h3>
-      <p>各インターフェースをラムダ式で実装した超シンプルな動作例です。</p>
+      <h3><span class="material-symbols-outlined">code</span> 主な関数型インタフェースの使用例</h3>
+      <p>各インターフェースをラムダ式で実装した動作例です。</p>
       <div class="code-group">
         <pre class="code-block">import java.util.function.*;
+import java.util.concurrent.Callable;
 
-public class BasicInterfacesDemo {
-    public static void main(String[] args) {
-        // 1. Predicate (引数1つ → 判定してbooleanを返す)
+public class FunctionalInterfacesDemo {
+    public static void main(String[] args) throws Exception {
+        // 1. Supplier (引数なし → 値を返す)
+        Supplier&lt;String&gt; supplier = () -&gt; "Hello, Supplier!";
+        System.out.println("Supplier: " + supplier.get());
+
+        // 2. Consumer (引数1つ → 戻り値なし)
+        Consumer&lt;String&gt; consumer = s -&gt; System.out.println("Consumer: " + s);
+        consumer.accept("Hello");
+
+        // 3. BiConsumer (引数2つ → 戻り値なし)
+        BiConsumer&lt;String, Integer&gt; biConsumer = (s, n) -&gt; System.out.println("BiConsumer: " + s + " x" + n);
+        biConsumer.accept("Java", 3);
+
+        // 4. Predicate (引数1つ → boolean)
         Predicate&lt;String&gt; isEmpty = s -&gt; s.isEmpty();
-        System.out.println("Predicate: " + isEmpty.test("")); // true
+        System.out.println("Predicate: " + isEmpty.test(""));  // true
 
-        // 2. Consumer (引数1つ → 処理するが戻り値はなし)
-        Consumer&lt;String&gt; printer = s -&gt; System.out.println("Consumer: " + s);
-        printer.accept("Hello"); // Consumer: Hello
+        // 5. BiPredicate (引数2つ → boolean)
+        BiPredicate&lt;String, Integer&gt; longerThan = (s, n) -&gt; s.length() &gt; n;
+        System.out.println("BiPredicate: " + longerThan.test("Gold", 2)); // true
 
-        // 3. Function (引数1つ → 別の型に変換して返す)
+        // 6. Function (引数1つ → 別の型に変換)
         Function&lt;String, Integer&gt; length = s -&gt; s.length();
         System.out.println("Function: " + length.apply("Java")); // 4
 
-        // 4. Supplier (引数なし → 生成・評価して任意の値を返す)
-        Supplier&lt;Double&gt; random = () -&gt; Math.random();
-        System.out.println("Supplier: " + random.get()); // 例: 0.846...
+        // 7. BiFunction (引数2つ → 別の型に変換)
+        BiFunction&lt;String, Integer, String&gt; repeat = (s, n) -&gt; s.repeat(n);
+        System.out.println("BiFunction: " + repeat.apply("A", 3)); // AAA
 
-        // 5. UnaryOperator (引数1つ、戻り値がすべて同じ型)
+        // 8. UnaryOperator (引数・戻り値が同じ型)
         UnaryOperator&lt;String&gt; upper = s -&gt; s.toUpperCase();
         System.out.println("UnaryOperator: " + upper.apply("gold")); // GOLD
 
-        // 6. BinaryOperator (引数2つ、戻り値がすべて同じ型)
+        // 9. BinaryOperator (引数2つ・戻り値が同じ型)
         BinaryOperator&lt;Integer&gt; add = (a, b) -&gt; a + b;
         System.out.println("BinaryOperator: " + add.apply(10, 20)); // 30
 
-        // 7. BiFunction (引数2つ → 別の型に変換して返す)
-        BiFunction&lt;String, Integer, String&gt; repeat = (s, n) -&gt; s.repeat(n);
-        System.out.println("BiFunction: " + repeat.apply("A", 3)); // AAA
+        // 10. Runnable (引数なし、戻り値なし)
+        Runnable runnable = () -&gt; System.out.println("Runnable: run()");
+        runnable.run();
+
+        // 11. Callable (引数なし → 値を返す、例外もスローできる)
+        Callable&lt;Integer&gt; callable = () -&gt; 42;
+        System.out.println("Callable: " + callable.call());
     }
 }</pre>
         <div class="output-block">
           <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
-          Predicate: true<br>
+          Supplier: Hello, Supplier!<br>
           Consumer: Hello<br>
+          BiConsumer: Java x3<br>
+          Predicate: true<br>
+          BiPredicate: true<br>
           Function: 4<br>
-          Supplier: 0.8465492471923143<br>
+          BiFunction: AAA<br>
           UnaryOperator: GOLD<br>
           BinaryOperator: 30<br>
-          BiFunction: AAA
+          Runnable: run()<br>
+          Callable: 42
         </div>
       </div>
 

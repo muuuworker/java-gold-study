@@ -142,6 +142,8 @@ System.out.println();</pre>
         <tr><td><code class="inline">skip(long)</code></td><td>long</td><td>先頭n件を読み飛ばす</td></tr>
         <tr><td><code class="inline">peek(Consumer)</code></td><td>Consumer&lt;T&gt;</td><td>副作用（デバッグ等）を挟む。要素は変化しない</td></tr>
         <tr><td><code class="inline">mapToInt(ToIntFunction)</code></td><td>ToIntFunction&lt;T&gt;</td><td>IntStreamに変換（sum/average等が使える）</td></tr>
+        <tr><td><code class="inline">takeWhile(Predicate)</code></td><td>Predicate&lt;T&gt;</td><td>条件が<strong>真の間</strong>だけ要素を取り出す。最初に偽になった時点で終了（Java 9+）</td></tr>
+        <tr><td><code class="inline">dropWhile(Predicate)</code></td><td>Predicate&lt;T&gt;</td><td>条件が<strong>真の間</strong>は要素を捨て続ける。最初に偽になった時点から残りを返す（Java 9+）</td></tr>
       </table>
       <div class="code-group">
         <pre class="code-block">List&lt;Integer&gt; nums = Arrays.asList(3, 1, 4, 1, 5, 9, 2, 6, 5);
@@ -190,7 +192,22 @@ nums.stream().limit(2)
     .peek(n -> System.out.println("peek前: " + n))
     .map(n -> n * 10)
     .peek(n -> System.out.println("peek後: " + n))
-    .forEach(n -> {});</pre>
+    .forEach(n -> {});
+
+// takeWhile (Java 9+): 条件が真の間だけ取り出す。最初に偽になった時点で打ち切り
+// ※ filter と違い、一度 false になると以降の要素は条件に関わらず全て捨てられる
+List&lt;Integer&gt; sortedNums = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9);
+List&lt;Integer&gt; taken = sortedNums.stream()
+    .takeWhile(n -> n &lt; 5)          // 1,2,3,4 まで取得 → 5が偽になった時点で終了
+    .collect(Collectors.toList());
+System.out.println("takeWhile(&lt;5): " + taken); // [1, 2, 3, 4]
+
+// dropWhile (Java 9+): 条件が真の間は捨て続ける。最初に偽になった時点から残りを返す
+// ※ 一度 false になると以降の要素は条件に関わらず全て残る
+List&lt;Integer&gt; dropped = sortedNums.stream()
+    .dropWhile(n -> n &lt; 5)          // 1,2,3,4 を捨てる → 5が偽になった時点から残りを返す
+    .collect(Collectors.toList());
+System.out.println("dropWhile(&lt;5): " + dropped); // [5, 6, 7, 8, 9]</pre>
         <div class="output-block">
           <span class="output-label"><span class="material-symbols-outlined" style="font-size:16px">terminal</span> Output</span>
           filter:   [5, 9, 6, 5]<br>
@@ -206,7 +223,9 @@ nums.stream().limit(2)
           peek前: 3<br>
           peek後: 30<br>
           peek前: 1<br>
-          peek後: 10
+          peek後: 10<br>
+          takeWhile(&lt;5): [1, 2, 3, 4]<br>
+          dropWhile(&lt;5): [5, 6, 7, 8, 9]
         </div>
       </div>
     </section>
